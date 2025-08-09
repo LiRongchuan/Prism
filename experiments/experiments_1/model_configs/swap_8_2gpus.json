@@ -1,0 +1,99 @@
+[
+    {
+        "model_name": "model_1",
+        "model_path": "mistralai/Mistral-Nemo-Instruct-2407",
+        "tp_size": 1,
+        "init_placements": [
+            {
+                "gpu_ids": [0],
+                "on": false,
+                "max_memory_pool_size": 10
+            }
+        ]
+    },
+    {
+        "model_name": "model_2",
+        "model_path": "mistralai/Mistral-Nemo-Instruct-2407",
+        "tp_size": 1,
+        "init_placements": [
+            {
+                "gpu_ids": [0],
+                "on": false,
+                "max_memory_pool_size": 10
+            }
+        ]
+    },
+    {
+        "model_name": "model_3",
+        "model_path": "meta-llama/Meta-Llama-3.1-8B",
+        "tp_size": 1,
+        "init_placements": [
+            {
+                "gpu_ids": [0],
+                "on": false,
+                "max_memory_pool_size": 5
+            }
+        ]
+    },
+    {
+        "model_name": "model_4",
+        "model_path": "mistralai/Mistral-Nemo-Instruct-2407",
+        "tp_size": 1,
+        "init_placements": [
+            {
+                "gpu_ids": [0],
+                "on": false,
+                "max_memory_pool_size": 5
+            }
+        ]
+    },
+    {
+        "model_name": "model_5",
+        "model_path": "mistralai/Mistral-7B-Instruct-v0.2",
+        "tp_size": 1,
+        "init_placements": [
+            {
+                "gpu_ids": [1],
+                "on": false,
+                "max_memory_pool_size": 5
+            }
+        ]
+    },
+    {
+        "model_name": "model_6",
+        "model_path": "mistralai/Mistral-7B-Instruct-v0.2",
+        "tp_size": 1,
+        "init_placements": [
+            {
+                "gpu_ids": [1],
+                "on": false,
+                "max_memory_pool_size": 5
+            }
+        ]
+    },
+    {
+        "model_name": "model_7",
+        "model_path": "meta-llama/Llama-3.2-3B",
+        "tp_size": 1,
+        "init_placements": [
+            {
+                "gpu_ids": [1],
+                "on": false,
+                "max_memory_pool_size": 5
+            }
+        ]
+    },
+    {
+        "model_name": "model_8",
+        "model_path": "meta-llama/Llama-3.2-3B",
+        "tp_size": 1,
+        "init_placements": [
+            {
+                "gpu_ids": [1],
+                "on": false,
+                "max_memory_pool_size": 5
+            }
+        ]
+    }
+]
+

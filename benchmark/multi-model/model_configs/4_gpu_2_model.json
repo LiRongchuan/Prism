@@ -1,0 +1,28 @@
+[
+    {
+        "model_name": "model_1",
+        "model_path": "Qwen/Qwen2.5-32B",
+        "tokenizer_path": "Qwen/Qwen2.5-32B",
+        "tp_size": 4,
+        "init_placements": [
+            {
+                "gpu_ids": [0, 1, 2, 3],
+                "on": true,
+                "max_memory_pool_size": 10
+            }
+        ]
+    },
+    {
+        "model_name": "model_4",
+        "model_path": "meta-llama/Llama-3.3-70B-Instruct",
+        "tokenizer_path": "meta-llama/Llama-3.3-70B-Instruct",
+        "tp_size": 4,
+        "init_placements": [
+            {
+                "gpu_ids": [0, 1, 2, 3],
+                "on": true,
+                "max_memory_pool_size": 10
+            }
+        ]
+    }
+]

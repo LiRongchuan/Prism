@@ -1,0 +1,51 @@
+[
+    {
+        "model_name": "model_1",
+        "model_path": "meta-llama/Llama-2-7b-hf",
+        "tp_size": 1,
+        "init_placements": [
+            {
+                "gpu_ids": [0],
+                "on": true,
+                "max_memory_pool_size": 10
+            }
+        ]
+    },
+    {
+        "model_name": "model_2",
+        "model_path": "meta-llama/Llama-2-7b-hf",
+        "tp_size": 1,
+        "init_placements": [
+            {
+                "gpu_ids": [0],
+                "on": false,
+                "max_memory_pool_size": 10
+            }
+        ]
+    },
+    {
+        "model_name": "model_3",
+        "model_path": "meta-llama/Llama-2-7b-hf",
+        "tp_size": 1,
+        "init_placements": [
+            {
+                "gpu_ids": [0],
+                "on": true,
+                "max_memory_pool_size": 5
+            }
+        ]
+    },
+    {
+        "model_name": "model_4",
+        "model_path": "meta-llama/Llama-2-7b-hf",
+        "tp_size": 1,
+        "init_placements": [
+            {
+                "gpu_ids": [0],
+                "on": false,
+                "max_memory_pool_size": 5
+            }
+        ]
+    }
+]
+
