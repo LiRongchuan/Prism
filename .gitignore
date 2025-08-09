@@ -178,17 +178,9 @@ benchmark/llava_bench/mme_pack
 tmp*.txt
 
 # Plots
-*.png
 *.pdf
 
 # personnal
 work_dirs/
 *.csv
 *.tsv
-# mmy.sh
-
-!logo.png
-!benchmark/multi-model/hyper_trace/*
-!benchmark/multi-model/hyper*.json
-!benchmark/multi-model/experiment_configs_yangmin/*
-!benchmark/multi-model/model_configs/lym_exp/*
