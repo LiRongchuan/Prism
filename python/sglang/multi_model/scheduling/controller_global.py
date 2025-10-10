@@ -16,6 +16,7 @@ import torch
 import zmq
 
 from sglang.multi_model.scheduling.policy.simple_global import SimpleGlobalPolicy
+from sglang.multi_model.scheduling.policy.tp_global import TPGlobalPolicy
 from sglang.multi_model.multi_model_server_args import MultiModelServerArgs
 from sglang.multi_model.scheduling.action import BaseAction
 from sglang.multi_model.scheduling.constants import (
@@ -87,7 +88,8 @@ class GlobalController:
                 self.model_instance_state_dict.values(), []
             )
             # NOTE(ke): For TP case, only consider rank0 state
-            gpu_ids = set([mod.gpu_ids[0] for mod in models])
+            # gpu_ids = set([mod.gpu_ids[0] for mod in models])
+            gpu_ids = set(g for mod in models for g in mod.gpu_ids)
             self.gpu_ids = list(gpu_ids)
         else:
             self.gpu_ids = list(range(self.server_args.num_gpus))
@@ -102,6 +104,7 @@ class GlobalController:
         start_mem_check = time.time()
         gpu_available_memory = {}
         for gpu_id in range(len(self.gpu_ids)):
+            torch.cuda.set_device(gpu_id)
             gpu_available_memory[gpu_id] = get_available_gpu_memory("cuda", gpu_id)
             logger.info(f"GPU {gpu_id}, memory: {gpu_available_memory[gpu_id]:.2f} GB")
         end_mem_check = time.time()
@@ -142,6 +145,13 @@ class GlobalController:
                 model_weights_info=self.model_weights_info_after_renamed,
                 workers_per_gpu=self.server_args.workers_per_gpu,
             )
+        elif self.server_args.policy == "tp-global":
+            self.policy = TPGlobalPolicy(
+                num_gpus=len(self.gpu_ids),
+                gpu_mem=gpu_mem,
+                model_weights_info=self.model_weights_info_after_renamed,
+                workers_per_gpu=self.server_args.workers_per_gpu,
+            )
         else:
             raise ValueError(f"Unknown policy: {self.server_args.policy}")
 
@@ -174,9 +184,8 @@ class GlobalController:
                 logger.error(f"Error in queue update loop: {get_exception_traceback()}")
 
     def recv_requests(self):
-        """Receive requests from both request handler and schedulers."""
+        """从request handler和scheduler接受请求"""
         recv_reqs = []
-        
         # Receive from request handler
         while True:
             try:
@@ -184,7 +193,6 @@ class GlobalController:
             except zmq.ZMQError:
                 break
             recv_reqs.append(recv_req)
-
         # Receive from schedulers
         while True:
             try:
@@ -244,37 +252,10 @@ class GlobalController:
                 )
             else:
                 raise ValueError(f"Unknown request type: {type(recv_req)}")
-
         # Log queue information for models with new requests
         for model_name in model_names:
             model_queue = self.model_queues[model_name]
             logger.info(f"{model_queue}")
-    
-    def _get_gpu_to_active_instances(
-        self,
-        model_instance_state_dict: Dict[str, List[ModelInstanceState]]
-    ) -> Dict[int, List[ModelInstanceState]]:
-        """Create a helper data structure that maps GPU IDs to their active model instances."""
-        gpu_to_active_instances: Dict[int, List[ModelInstanceState]] = dict()
-        for gpu_id in self.gpu_ids:
-            gpu_to_active_instances[gpu_id] = []
-
-        for model_name, instances in model_instance_state_dict.items():
-            model_active_instances = {}  # GPU ID -> list of active instances
-            for instance in instances:
-                if instance.state == ModelState.ACTIVE:
-                    for gpu_id in instance.gpu_ids:
-                        if gpu_id not in model_active_instances:
-                            model_active_instances[gpu_id] = []
-                        model_active_instances[gpu_id].append(instance)
-
-            assert len(model_active_instances) <= 1
-            
-            if model_active_instances:
-                gpu_id = list(model_active_instances.keys())[0]
-                gpu_to_active_instances[gpu_id].extend(model_active_instances[gpu_id])
-
-        return gpu_to_active_instances
 
     def run_scheduling_loop(self):
         """Main scheduling loop that generates and executes scheduling actions."""
@@ -353,9 +334,7 @@ class GlobalController:
             # Initialize instances based on initial placements
             for gpu_id, model_names in init_placements.items():
                 for model_name in model_names:
-                    model_weights_memory = self.model_weights_info_after_renamed[
-                        model_name
-                    ]["model_size"]
+                    model_weights_memory = self.model_weights_info_after_renamed[model_name]["model_size"]
                     for idx in self.gpu_ids:
                         instance_state = ModelInstanceState(
                             model_name=model_name,
@@ -463,12 +442,16 @@ class GlobalController:
                 gpu_id = mod.gpu_ids[0]
                 
                 if mod.state == ModelState.ACTIVE:
-                    mod_on_gpu[m_name] = gpu_id
+                    # mod_on_gpu[m_name] = gpu_id
+                    mod_on_gpu[m_name] = [gpu_id]
                     if m_name not in gpu_active_models[gpu_id]:
                         gpu_active_models[gpu_id].append(m_name)
-                    
-                    gpu_active_weights[gpu_id] += model_weights_info_after_renamed[m_name]["model_size"]
-                    logger.debug(f"Model {m_name} is active on GPU {gpu_id}, weight added: {model_weights_info_after_renamed[m_name]['model_size']}")
+                    # 对TP分块
+                    # gpu_active_weights[gpu_id] += model_weights_info_after_renamed[m_name]["model_size"]
+                    # logger.debug(f"Model {m_name} is active on GPU {gpu_id}, weight added: {model_weights_info_after_renamed[m_name]['model_size']}")
+                    weight_block_size = model_weights_info_after_renamed[m_name]["model_size"] / len(mod.gpu_ids)
+                    gpu_active_weights[gpu_id] += weight_block_size
+                    logger.debug(f"Model {m_name} is active on GPU {gpu_id}, weight added: {weight_block_size}")
                 else:
                     mod_on_gpu[m_name] = [-1]
 
@@ -479,13 +462,15 @@ class GlobalController:
                 mod_total_req_len[m_name] = mod_running_req_len[m_name] + mod_q_waiting_len[m_name]
 
                 # Calculate GPU request distribution
-                if isinstance(mod_on_gpu[m_name], list): 
-                    gpu_id = mod_on_gpu[m_name][0]
-                else:
-                    gpu_id = mod_on_gpu[m_name]
-
-                if gpu_id >= 0:
-                    gpu_requests[gpu_id] += mod_total_req_len[m_name]
+                # if isinstance(mod_on_gpu[m_name], list): 
+                #     gpu_id = mod_on_gpu[m_name][0]
+                # else:
+                #     gpu_id = mod_on_gpu[m_name]
+                # if gpu_id >= 0:
+                #         gpu_requests[gpu_id] += mod_total_req_len[m_name]
+                for gpu_id in mod_on_gpu[m_name]:
+                    if gpu_id >= 0:
+                        gpu_requests[gpu_id] += mod_total_req_len[m_name]
 
             # Calculate memory per request for each GPU
             for gpu_id in self.gpu_ids:

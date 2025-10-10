@@ -909,6 +909,7 @@ class MultiModelServerArgs:
             type=str,
             choices=[
                 "simple-global",
+                "tp-global"
             ],
             default=MultiModelServerArgs.policy,
             help="The policy for multi-model scheduling.",

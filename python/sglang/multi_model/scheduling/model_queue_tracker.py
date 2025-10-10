@@ -26,6 +26,7 @@ class ReqState(Enum):
 
 @dataclasses.dataclass
 class Req:
+    """ 维护单一请求 """
     rid: str
     arrival_time: Optional[float] = None
     slo: Optional[float] = None
@@ -42,7 +43,7 @@ class Req:
     generated_output_len: Optional[int] = None
 
     finish_time: Optional[float] = None
-    _left_exec_time: Optional[float] = None
+    _left_exec_time: Optional[float] = None # 预计剩余结束时间
     remaining_time_budget: Optional[float] = None
     last_exec_tstamp: float = float(
         "-inf"
@@ -53,6 +54,7 @@ class Req:
 
     @property
     def left_exec_time(self):
+        """估计剩余结束时间（output_len * 0.02）"""
         if self._left_exec_time is None:
             # if a request's output length is None, we use default value 512
             # TODO: change to a more accurate way of estimating the left execution time
@@ -75,6 +77,7 @@ class Req:
         output_len: int,
         is_warmup: bool,
     ):
+        """到达请求更新"""
         if self.state == ReqState.WAITING:
             logger.warning(
                 f"Request {self.rid} (arrival_time: {arrival_time}) is already in waiting state. New arrival time: {arrival_time}"
@@ -87,14 +90,17 @@ class Req:
         self.is_warmup = is_warmup
 
     def update_running_info(self, start_time: float, gpu_id: int):
+        """运行请求更新"""
         self.start_running_time = start_time
         self.gpu_id = gpu_id
 
     def update_preempt_info(self, retract_time: float, output_len: int):
+        """抢占请求更新"""
         self.preempted_time = retract_time
         self.generated_output_len = output_len
 
     def update_finish_info(self, finish_time: float):
+        """完成请求更新"""
         self.state = ReqState.FINISHED
         self.finish_time = finish_time
 
@@ -103,9 +109,10 @@ class Req:
 
 
 class ModelQueueTracker:
+    """ 维护指定模型的请求队列 """
     def __init__(self, model_name: str):
         self.model_name = model_name
-        self.received_reqs: dict[str, Req] = {}  # save all received requests.
+        self.received_reqs: dict[str, Req] = {}  # rid -> Req对象映射关系
         self.waiting_reqs: deque[Req] = deque()
         self.running_reqs: List[Req] = []
 
@@ -133,6 +140,7 @@ class ModelQueueTracker:
                 break
 
     def enqueue_req(self, generate_req: GenerateReqInput) -> None:
+        """添加或更新请求"""
         if (
             generate_req.rid not in self.received_reqs
             or self.received_reqs[generate_req.rid].state == ReqState.FINISHED
@@ -151,13 +159,13 @@ class ModelQueueTracker:
             if not generate_req.is_warmup:
                 self.waiting_reqs.append(req)
             
-            # we should not update the last arrival time for warmup requests
+            # 只对非warmup请求更新最后到达时间
             if generate_req.is_warmup is False: 
                 self._last_arrival_time = max(
                     self._last_arrival_time, generate_req.arrival_time
                 )
         else:
-            # existed request
+            # Existed request
             req = self.received_reqs[generate_req.rid]
             req.update_wait_info(
                 generate_req.arrival_time,
@@ -172,7 +180,7 @@ class ModelQueueTracker:
             if req.state == ReqState.RUNNING:
                 self._update_req_in_queue(self.running_reqs, req)
 
-            # we should not update the last arrival time for warmup requests
+            # 只对非warmup请求更新最后到达时间
             if req.is_warmup is False:
                 self._last_arrival_time = max(
                     self._last_arrival_time, generate_req.arrival_time
@@ -184,6 +192,7 @@ class ModelQueueTracker:
                     self._get_req_from_queue(self.running_reqs, req.rid)
 
     def start_running_reqs(self, batch_run_req: BatchRunReq):
+        """批请求开始运行"""
         for rid in batch_run_req.rids:
             req = self.received_reqs.get(rid)
 
@@ -223,6 +232,7 @@ class ModelQueueTracker:
         for rid, len_output_id in zip(
             batch_retract_decode_req.rids, batch_retract_decode_req.len_output_ids
         ):
+            """批请求准备抢占"""
             req = self.received_reqs.get(rid)
             if req is None:
                 raise ValueError(
@@ -254,6 +264,7 @@ class ModelQueueTracker:
             self.received_reqs[rid] = req
 
     def finish_req(self, finish_req: FinishReq):
+        """请求完成"""
         rid = finish_req.rid
         req = self.received_reqs.get(rid)
         if req is None:
@@ -282,6 +293,7 @@ class ModelQueueTracker:
         return self._last_arrival_time
 
     def get_earliest_arrival_time(self) -> float:
+        """等待队列最早入队时间"""
         if self.waiting_reqs:
             if self.waiting_reqs[0].state == ReqState.WAITING:
                 return self.waiting_reqs[0].arrival_time
@@ -292,9 +304,6 @@ class ModelQueueTracker:
                     f"Request {self.waiting_reqs[0].rid} in waiting queue is in {self.waiting_reqs[0].state} state"
                 )
         return float("inf")
-
-    def get_last_arrival_time(self) -> float:
-        return self._last_arrival_time
 
     def get_num_waiting_reqs(self) -> int:
         return len(self.waiting_reqs)

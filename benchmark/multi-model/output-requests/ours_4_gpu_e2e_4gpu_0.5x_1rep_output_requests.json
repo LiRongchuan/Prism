@@ -1,0 +1,5024 @@
+[
+  {
+    "success": true,
+    "latency": 7.165530298836529,
+    "ttft": 0.07587575912475586,
+    "tpot": 0.05163759732768483,
+    "output_len": 137,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 0.5106342425569892,
+    "ttft": 0.4135003089904785,
+    "tpot": 0.02983824412027995,
+    "output_len": 3,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 0.21424471028149128,
+    "ttft": 0.07064604759216309,
+    "tpot": 0.03421592712402344,
+    "output_len": 4,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 19.422599869780242,
+    "ttft": 0.3479189872741699,
+    "tpot": 0.044827565585865696,
+    "output_len": 425,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 2.9526516497135162,
+    "ttft": 0.05988430976867676,
+    "tpot": 0.045048996806144714,
+    "output_len": 64,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 23.219025807455182,
+    "ttft": 0.17920708656311035,
+    "tpot": 0.04487908281545658,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 1.692033937200904,
+    "ttft": 0.06347107887268066,
+    "tpot": 0.05230299888118621,
+    "output_len": 31,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 1.2116705505177379,
+    "ttft": 0.050313472747802734,
+    "tpot": 0.050194190896075706,
+    "output_len": 23,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 4.668258706107736,
+    "ttft": 0.054332733154296875,
+    "tpot": 0.04514643958970612,
+    "output_len": 102,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 19.876557719893754,
+    "ttft": 0.06022500991821289,
+    "tpot": 0.04498302394693548,
+    "output_len": 440,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 23.305614021606743,
+    "ttft": 0.0674130916595459,
+    "tpot": 0.045432820012191504,
+    "output_len": 511,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 18.80640028230846,
+    "ttft": 0.0840463638305664,
+    "tpot": 0.044216910716207876,
+    "output_len": 423,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 1.8735833233222365,
+    "ttft": 0.06672263145446777,
+    "tpot": 0.042847576595488046,
+    "output_len": 42,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 1.0809772089123726,
+    "ttft": 0.05161428451538086,
+    "tpot": 0.04263933499654134,
+    "output_len": 24,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 23.267768018878996,
+    "ttft": 0.05351710319519043,
+    "tpot": 0.045212962241665426,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 23.272697906009853,
+    "ttft": 0.061600685119628906,
+    "tpot": 0.04519963915120324,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 0.13479392603039742,
+    "ttft": 0.08484148979187012,
+    "tpot": 0.021799802780151367,
+    "output_len": 2,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 0.09927972964942455,
+    "ttft": 0.05067300796508789,
+    "tpot": 0.02165842056274414,
+    "output_len": 2,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 23.44337358046323,
+    "ttft": 0.2054886817932129,
+    "tpot": 0.04525741684971265,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 23.559531991370022,
+    "ttft": 0.06777310371398926,
+    "tpot": 0.045755037322611374,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 0.21793208830058575,
+    "ttft": 0.07726812362670898,
+    "tpot": 0.06648588180541992,
+    "output_len": 2,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 0.14285170286893845,
+    "ttft": 0.04896259307861328,
+    "tpot": 0.044097185134887695,
+    "output_len": 2,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 0.1360502066090703,
+    "ttft": 0.08565306663513184,
+    "tpot": 0.022082924842834473,
+    "output_len": 2,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 0.14091617800295353,
+    "ttft": 0.08962535858154297,
+    "tpot": 0.02364492416381836,
+    "output_len": 2,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 0.0986230643466115,
+    "ttft": 0.05231308937072754,
+    "tpot": 0.021377921104431152,
+    "output_len": 2,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 44.90809273533523,
+    "ttft": 0.12648940086364746,
+    "tpot": 0.04580863544616387,
+    "output_len": 977,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 1.1694782190024853,
+    "ttft": 0.18149256706237793,
+    "tpot": 0.049027514457702634,
+    "output_len": 20,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 0.9766192305833101,
+    "ttft": 0.286083459854126,
+    "tpot": 0.04022362652946921,
+    "output_len": 17,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 13.677642018534243,
+    "ttft": 0.05611705780029297,
+    "tpot": 0.044183546846563164,
+    "output_len": 308,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 1.169561080634594,
+    "ttft": 0.052465200424194336,
+    "tpot": 0.041113703339188186,
+    "output_len": 27,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 10.646799609996378,
+    "ttft": 0.08283114433288574,
+    "tpot": 0.04432731816748611,
+    "output_len": 238,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 20.70254308078438,
+    "ttft": 0.07773542404174805,
+    "tpot": 0.046833395416086374,
+    "output_len": 440,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 18.66660283599049,
+    "ttft": 0.08658695220947266,
+    "tpot": 0.04617085978759462,
+    "output_len": 402,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 1.0786475855857134,
+    "ttft": 0.05916476249694824,
+    "tpot": 0.042218794425328575,
+    "output_len": 24,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 4.9883472034707665,
+    "ttft": 0.12343764305114746,
+    "tpot": 0.04579706461924427,
+    "output_len": 106,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 2.4266219520941377,
+    "ttft": 0.04485273361206055,
+    "tpot": 0.04240049208913531,
+    "output_len": 56,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 24.00971343833953,
+    "ttft": 0.0932164192199707,
+    "tpot": 0.04658083051268817,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 4.21590449847281,
+    "ttft": 0.17295479774475098,
+    "tpot": 0.04690375993418139,
+    "output_len": 86,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 10.731156560592353,
+    "ttft": 0.06634926795959473,
+    "tpot": 0.04591387304766425,
+    "output_len": 232,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 16.720046438276768,
+    "ttft": 0.0764610767364502,
+    "tpot": 0.04684068384304853,
+    "output_len": 355,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 17.417118250392377,
+    "ttft": 0.10486936569213867,
+    "tpot": 0.04661529276248901,
+    "output_len": 371,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 1.1797328712418675,
+    "ttft": 0.17721319198608398,
+    "tpot": 0.04328472717948582,
+    "output_len": 23,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 37.7814882947132,
+    "ttft": 0.07097959518432617,
+    "tpot": 0.04800620899078952,
+    "output_len": 785,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 21.29647469893098,
+    "ttft": 0.24900484085083008,
+    "tpot": 0.04621437617710659,
+    "output_len": 455,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 24.77812626771629,
+    "ttft": 0.05087637901306152,
+    "tpot": 0.04817183765983953,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 0.33347162045538425,
+    "ttft": 0.11834239959716797,
+    "tpot": 0.03485576311747233,
+    "output_len": 6,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 1.0874965516850352,
+    "ttft": 0.049518585205078125,
+    "tpot": 0.044848659764165466,
+    "output_len": 23,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 8.210068242624402,
+    "ttft": 0.08213996887207031,
+    "tpot": 0.046644358799375334,
+    "output_len": 174,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 25.24632413033396,
+    "ttft": 0.06296038627624512,
+    "tpot": 0.04905673077231959,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 13.413633960299194,
+    "ttft": 0.14598751068115234,
+    "tpot": 0.04553087142734593,
+    "output_len": 291,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 21.581421519629657,
+    "ttft": 0.1711134910583496,
+    "tpot": 0.048182128248987974,
+    "output_len": 444,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 0.252009185962379,
+    "ttft": 0.07491707801818848,
+    "tpot": 0.042723894119262695,
+    "output_len": 4,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 2.5994546432048082,
+    "ttft": 0.11245965957641602,
+    "tpot": 0.04595135317908393,
+    "output_len": 54,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 25.077586179599166,
+    "ttft": 0.07389640808105469,
+    "tpot": 0.04870387266950998,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 7.128484288230538,
+    "ttft": 0.07558703422546387,
+    "tpot": 0.044568605060818826,
+    "output_len": 158,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 25.094975334592164,
+    "ttft": 0.10223817825317383,
+    "tpot": 0.0487772012129426,
+    "output_len": 512,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 12.2966985469684,
+    "ttft": 0.08508086204528809,
+    "tpot": 0.04998972963114254,
+    "output_len": 244,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 0.6458527725189924,
+    "ttft": 0.13213062286376953,
+    "tpot": 0.038997301688561074,
+    "output_len": 13,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 25.415102836675942,
+    "ttft": 0.08721303939819336,
+    "tpot": 0.04933228269655105,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 16.550859534181654,
+    "ttft": 0.0860905647277832,
+    "tpot": 0.0507706109388375,
+    "output_len": 324,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 26.587673424743116,
+    "ttft": 0.0670926570892334,
+    "tpot": 0.05165964306911298,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 12.897391025908291,
+    "ttft": 0.08085322380065918,
+    "tpot": 0.052688612368862325,
+    "output_len": 243,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 28.117897246032953,
+    "ttft": 0.15697884559631348,
+    "tpot": 0.05446119336356894,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 27.116220109164715,
+    "ttft": 0.13681364059448242,
+    "tpot": 0.0529629280150288,
+    "output_len": 509,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 0.41313241608440876,
+    "ttft": 0.07377505302429199,
+    "tpot": 0.04768225124904087,
+    "output_len": 7,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 6.990645656362176,
+    "ttft": 0.09922266006469727,
+    "tpot": 0.05293095478644738,
+    "output_len": 130,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 13.025396395474672,
+    "ttft": 0.05638527870178223,
+    "tpot": 0.05100288541298213,
+    "output_len": 254,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 11.894901316612959,
+    "ttft": 0.11899828910827637,
+    "tpot": 0.05159203002327367,
+    "output_len": 228,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 41.54003506246954,
+    "ttft": 0.0915074348449707,
+    "tpot": 0.0807492342608714,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 1.810737262479961,
+    "ttft": 0.051053762435913086,
+    "tpot": 0.0730704665184021,
+    "output_len": 24,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 41.65013285726309,
+    "ttft": 0.25380516052246094,
+    "tpot": 0.08064884144892702,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 4.227593757212162,
+    "ttft": 0.08410811424255371,
+    "tpot": 0.05168408155441284,
+    "output_len": 80,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 6.203875210136175,
+    "ttft": 0.07091021537780762,
+    "tpot": 0.05102672576904297,
+    "output_len": 120,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 7.366152415983379,
+    "ttft": 0.14458823204040527,
+    "tpot": 0.051141495400286736,
+    "output_len": 141,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 4.077014499343932,
+    "ttft": 0.05181312561035156,
+    "tpot": 0.0495828022191554,
+    "output_len": 81,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 62.63672819919884,
+    "ttft": 0.1830461025238037,
+    "tpot": 0.10233957572061507,
+    "output_len": 610,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 17.449312868528068,
+    "ttft": 0.07686495780944824,
+    "tpot": 0.04795363067922013,
+    "output_len": 362,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 4.662103364244103,
+    "ttft": 0.06572151184082031,
+    "tpot": 0.04829757339075992,
+    "output_len": 95,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 117.81491631641984,
+    "ttft": 0.10014796257019043,
+    "tpot": 0.15068752817552009,
+    "output_len": 781,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 15.203745231963694,
+    "ttft": 0.05689358711242676,
+    "tpot": 0.04772826173704129,
+    "output_len": 317,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 53.34488855116069,
+    "ttft": 0.07105374336242676,
+    "tpot": 0.10381088851720502,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 55.880361828021705,
+    "ttft": 0.050748348236083984,
+    "tpot": 0.10879315967448273,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 56.25113514997065,
+    "ttft": 0.23128485679626465,
+    "tpot": 0.10915145585876226,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 63.8543705586344,
+    "ttft": 0.061112165451049805,
+    "tpot": 0.12431514983521103,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 68.18753276951611,
+    "ttft": 0.22310137748718262,
+    "tpot": 0.13243715851395219,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 2.7827752586454153,
+    "ttft": 0.12831974029541016,
+    "tpot": 0.04643157072234572,
+    "output_len": 57,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 4.567280556075275,
+    "ttft": 0.08890604972839355,
+    "tpot": 0.04560019532028509,
+    "output_len": 98,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 3.8105613673105836,
+    "ttft": 0.08806562423706055,
+    "tpot": 0.0452944592731755,
+    "output_len": 82,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 5.725334774702787,
+    "ttft": 0.09737229347229004,
+    "tpot": 0.047605102345094845,
+    "output_len": 118,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 5.705033781938255,
+    "ttft": 0.0699317455291748,
+    "tpot": 0.047266397155633494,
+    "output_len": 119,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 86.92164148017764,
+    "ttft": 0.08050274848937988,
+    "tpot": 0.16990114098192427,
+    "output_len": 511,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 6.106985412538052,
+    "ttft": 0.053557634353637695,
+    "tpot": 0.04612503342956077,
+    "output_len": 131,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 33.71270096115768,
+    "ttft": 0.07510066032409668,
+    "tpot": 0.12499737473668662,
+    "output_len": 269,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 1.1307932687923312,
+    "ttft": 0.06873703002929688,
+    "tpot": 0.04591490911400836,
+    "output_len": 23,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 2.4309794427827,
+    "ttft": 0.057871103286743164,
+    "tpot": 0.04639439021839815,
+    "output_len": 51,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 7.821699192747474,
+    "ttft": 0.04436135292053223,
+    "tpot": 0.053199999952969486,
+    "output_len": 146,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 3.658511963672936,
+    "ttft": 0.08053088188171387,
+    "tpot": 0.044628217816352844,
+    "output_len": 80,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 0.7306367764249444,
+    "ttft": 0.07042217254638672,
+    "tpot": 0.04354867935180664,
+    "output_len": 15,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 101.13092832174152,
+    "ttft": 0.0546574592590332,
+    "tpot": 0.19971492686290515,
+    "output_len": 506,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 99.51769055426121,
+    "ttft": 0.08046555519104004,
+    "tpot": 0.20584351972023152,
+    "output_len": 483,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 8.121645051054657,
+    "ttft": 0.05365753173828125,
+    "tpot": 0.13897419386896595,
+    "output_len": 58,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 323.3456910084933,
+    "ttft": 1.3455109596252441,
+    "tpot": 0.6288348170928657,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 322.54964436776936,
+    "ttft": 1.6959986686706543,
+    "tpot": 0.626600818708539,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 25.169627009890974,
+    "ttft": 1.6310298442840576,
+    "tpot": 0.8114367600145012,
+    "output_len": 29,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 133.27921143732965,
+    "ttft": 0.4676032066345215,
+    "tpot": 0.2598642435092515,
+    "output_len": 511,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 221.70415691658854,
+    "ttft": 0.6839485168457031,
+    "tpot": 0.81854040534408,
+    "output_len": 270,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 217.33097278140485,
+    "ttft": 0.12289857864379883,
+    "tpot": 0.8385794576991019,
+    "output_len": 259,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 128.85309265833348,
+    "ttft": 0.2467637062072754,
+    "tpot": 0.2608320161730474,
+    "output_len": 493,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 10.026886021718383,
+    "ttft": 0.2656228542327881,
+    "tpot": 0.6094801276922226,
+    "output_len": 16,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 144.0809807870537,
+    "ttft": 1.6737303733825684,
+    "tpot": 0.2775594216805917,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 31.678481198847294,
+    "ttft": 0.9961798191070557,
+    "tpot": 0.21153195150967302,
+    "output_len": 145,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 23.016239347867668,
+    "ttft": 0.686103343963623,
+    "tpot": 0.7697562349253687,
+    "output_len": 29,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 312.0328841758892,
+    "ttft": 0.8839735984802246,
+    "tpot": 0.6690951757533576,
+    "output_len": 465,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 21.88429628033191,
+    "ttft": 0.871387243270874,
+    "tpot": 0.2079607354532374,
+    "output_len": 101,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 210.97413607221097,
+    "ttft": 0.8255066871643066,
+    "tpot": 0.8473142731574274,
+    "output_len": 248,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 316.11250384151936,
+    "ttft": 0.7769834995269775,
+    "tpot": 0.6158338687382638,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 273.5016806824133,
+    "ttft": 0.5604135990142822,
+    "tpot": 0.7297380442287833,
+    "output_len": 374,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 315.8264385070652,
+    "ttft": 2.3036301136016846,
+    "tpot": 0.6122920447960496,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 192.27823759708554,
+    "ttft": 1.9414253234863281,
+    "tpot": 0.8935290636590949,
+    "output_len": 213,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 312.18032939359546,
+    "ttft": 0.43521785736083984,
+    "tpot": 0.6088400254957378,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 311.8029843773693,
+    "ttft": 0.21806788444519043,
+    "tpot": 0.6085275430232286,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 150.20517127681524,
+    "ttft": 0.35717320442199707,
+    "tpot": 0.29206089666712354,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 48.21235556062311,
+    "ttft": 0.3008291721343994,
+    "tpot": 0.24690739395692177,
+    "output_len": 194,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 62.892422039061785,
+    "ttft": 0.3378636837005615,
+    "tpot": 0.8567820869080008,
+    "output_len": 73,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 22.835908468812704,
+    "ttft": 0.9633626937866211,
+    "tpot": 0.22309402057102748,
+    "output_len": 98,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 169.87064472213387,
+    "ttft": 0.9428563117980957,
+    "tpot": 0.2968458077610063,
+    "output_len": 569,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 52.259934121742845,
+    "ttft": 0.5396327972412109,
+    "tpot": 0.9401968522505326,
+    "output_len": 55,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 133.44790526106954,
+    "ttft": 1.814488410949707,
+    "tpot": 0.2776679333755236,
+    "output_len": 474,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 14.237107680179179,
+    "ttft": 1.3471472263336182,
+    "tpot": 0.20447028629363528,
+    "output_len": 63,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 10.766438877210021,
+    "ttft": 1.1259727478027344,
+    "tpot": 0.20941407265870468,
+    "output_len": 46,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 8.39824162889272,
+    "ttft": 0.7480065822601318,
+    "tpot": 1.09199401310512,
+    "output_len": 7,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 183.28827413730323,
+    "ttft": 0.6934549808502197,
+    "tpot": 0.9411260909640912,
+    "output_len": 194,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 308.69768232200295,
+    "ttft": 0.4508063793182373,
+    "tpot": 0.6031781400019876,
+    "output_len": 511,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 35.12587230466306,
+    "ttft": 0.42190003395080566,
+    "tpot": 0.9377396879969416,
+    "output_len": 37,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 47.82513006404042,
+    "ttft": 0.41193127632141113,
+    "tpot": 0.9294370669944614,
+    "output_len": 51,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 31.355049341917038,
+    "ttft": 1.3905370235443115,
+    "tpot": 1.0329999348212933,
+    "output_len": 29,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 12.1345941061154,
+    "ttft": 0.9697954654693604,
+    "tpot": 0.6563890681547278,
+    "output_len": 17,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 306.92926445323974,
+    "ttft": 0.319713830947876,
+    "tpot": 0.5988086992874742,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 201.66551102045923,
+    "ttft": 0.30117249488830566,
+    "tpot": 0.26916443504751686,
+    "output_len": 748,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 37.613152753561735,
+    "ttft": 0.16755270957946777,
+    "tpot": 0.9130580832318562,
+    "output_len": 41,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 305.5659048659727,
+    "ttft": 0.3401932716369629,
+    "tpot": 0.5960724763572216,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 305.4600973315537,
+    "ttft": 0.23318767547607422,
+    "tpot": 0.5960747920908034,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 163.45427754707634,
+    "ttft": 1.0611813068389893,
+    "tpot": 0.9440591903619988,
+    "output_len": 172,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 70.4478104589507,
+    "ttft": 1.7899067401885986,
+    "tpot": 0.8076326229993035,
+    "output_len": 85,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 303.5779696078971,
+    "ttft": 1.8230843544006348,
+    "tpot": 0.5893023489043117,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 51.4378112051636,
+    "ttft": 1.0863139629364014,
+    "tpot": 0.8532293570243706,
+    "output_len": 59,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 237.330097024329,
+    "ttft": 0.24656152725219727,
+    "tpot": 0.7362224241221174,
+    "output_len": 322,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 215.32608705945313,
+    "ttft": 1.2761476039886475,
+    "tpot": 0.7589877032219096,
+    "output_len": 282,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 24.643494442105293,
+    "ttft": 0.8876736164093018,
+    "tpot": 0.8189137886310446,
+    "output_len": 29,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 296.3217832101509,
+    "ttft": 0.7101624011993408,
+    "tpot": 0.6356643943376439,
+    "output_len": 465,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 200.37013372778893,
+    "ttft": 0.32778120040893555,
+    "tpot": 0.8131221183916417,
+    "output_len": 246,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 299.63030263595283,
+    "ttft": 2.08903169631958,
+    "tpot": 0.5810972093604505,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 77.37342181243002,
+    "ttft": 1.7699658870697021,
+    "tpot": 0.7635782583795413,
+    "output_len": 99,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 296.07328452635556,
+    "ttft": 1.408949613571167,
+    "tpot": 0.6112817926525576,
+    "output_len": 482,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 289.82214750163257,
+    "ttft": 1.0627586841583252,
+    "tpot": 0.6809885698669361,
+    "output_len": 424,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 42.88201818987727,
+    "ttft": 1.04630446434021,
+    "tpot": 0.950655303218148,
+    "output_len": 44,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 28.268746500834823,
+    "ttft": 0.9701361656188965,
+    "tpot": 0.9409684394967968,
+    "output_len": 29,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 297.46880039107054,
+    "ttft": 0.48271608352661133,
+    "tpot": 0.5800056057050824,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 54.627811344340444,
+    "ttft": 0.46266722679138184,
+    "tpot": 0.796423894517562,
+    "output_len": 68,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 173.73025014903396,
+    "ttft": 0.274763822555542,
+    "tpot": 0.932484233251182,
+    "output_len": 186,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 292.42901714518666,
+    "ttft": 0.2612638473510742,
+    "tpot": 0.6242334241541023,
+    "output_len": 468,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 253.08487912919372,
+    "ttft": 0.2386646270751953,
+    "tpot": 0.7285817280969977,
+    "output_len": 347,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 158.32917816657573,
+    "ttft": 1.9036879539489746,
+    "tpot": 0.9595954637585974,
+    "output_len": 163,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 25.68707663845271,
+    "ttft": 1.6124014854431152,
+    "tpot": 0.9626797962188721,
+    "output_len": 25,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 287.08214512839913,
+    "ttft": 1.5754773616790771,
+    "tpot": 0.6654385353301788,
+    "output_len": 429,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 180.75574097875506,
+    "ttft": 1.2890570163726807,
+    "tpot": 0.8753826711235977,
+    "output_len": 205,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 22.935411255806684,
+    "ttft": 0.9533777236938477,
+    "tpot": 1.2208388381534152,
+    "output_len": 18,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 31.898043473251164,
+    "ttft": 0.9506669044494629,
+    "tpot": 0.9979915618896484,
+    "output_len": 31,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 42.80906075704843,
+    "ttft": 1.4410297870635986,
+    "tpot": 0.8990715586620829,
+    "output_len": 46,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 294.16563624795526,
+    "ttft": 1.3490781784057617,
+    "tpot": 0.5717882863245904,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 287.01925734151155,
+    "ttft": 0.7972009181976318,
+    "tpot": 0.6460524800130529,
+    "output_len": 443,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 203.03673489857465,
+    "ttft": 1.0451202392578125,
+    "tpot": 0.7767854149524982,
+    "output_len": 260,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 40.1120669413358,
+    "ttft": 2.7345163822174072,
+    "tpot": 0.8689588724180709,
+    "output_len": 43,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 123.19506794027984,
+    "ttft": 2.6865415573120117,
+    "tpot": 0.8860016044448403,
+    "output_len": 136,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 52.63510218076408,
+    "ttft": 0.30528998374938965,
+    "tpot": 0.2696777815671311,
+    "output_len": 194,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 227.03568891528994,
+    "ttft": 2.645874500274658,
+    "tpot": 0.7308701474814151,
+    "output_len": 307,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 234.74178931023926,
+    "ttft": 2.4941251277923584,
+    "tpot": 0.7302965338125169,
+    "output_len": 318,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 42.233921233564615,
+    "ttft": 1.0653269290924072,
+    "tpot": 0.2479356441153101,
+    "output_len": 166,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 21.432014998979867,
+    "ttft": 1.0928552150726318,
+    "tpot": 0.2606463860242795,
+    "output_len": 78,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 38.67226506955922,
+    "ttft": 0.9980380535125732,
+    "tpot": 0.2477871995223196,
+    "output_len": 152,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 292.05627876520157,
+    "ttft": 1.9912877082824707,
+    "tpot": 0.5664178933948278,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 22.63782049063593,
+    "ttft": 0.8453841209411621,
+    "tpot": 0.2503724070801132,
+    "output_len": 87,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 126.4438091814518,
+    "ttft": 3.1253504753112793,
+    "tpot": 0.8870972729415345,
+    "output_len": 139,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 291.33751717116684,
+    "ttft": 2.4484293460845947,
+    "tpot": 0.5641224910505116,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 39.827809100970626,
+    "ttft": 2.38911509513855,
+    "tpot": 0.8136644881704579,
+    "output_len": 46,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 290.3171297237277,
+    "ttft": 1.4268298149108887,
+    "tpot": 0.5641301809810102,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 63.145709806121886,
+    "ttft": 1.7171051502227783,
+    "tpot": 0.7311929946854001,
+    "output_len": 84,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 289.53862852137536,
+    "ttft": 1.637141466140747,
+    "tpot": 0.5622065118514001,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 14.008128602989018,
+    "ttft": 0.7411236763000488,
+    "tpot": 0.33998629985711515,
+    "output_len": 39,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 58.68120311200619,
+    "ttft": 1.5497405529022217,
+    "tpot": 0.7323361237843832,
+    "output_len": 78,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 51.626249325461686,
+    "ttft": 0.7154083251953125,
+    "tpot": 0.2751312539384172,
+    "output_len": 185,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 196.86059032939374,
+    "ttft": 1.444939374923706,
+    "tpot": 0.7723381425081034,
+    "output_len": 253,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 19.855043541640043,
+    "ttft": 0.372708797454834,
+    "tpot": 0.28636834551306334,
+    "output_len": 68,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 10.684956836514175,
+    "ttft": 1.7726576328277588,
+    "tpot": 0.7421146233876547,
+    "output_len": 12,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 240.66865214239806,
+    "ttft": 1.6275291442871094,
+    "tpot": 0.7071579271519678,
+    "output_len": 338,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 244.94241777528077,
+    "ttft": 1.3830993175506592,
+    "tpot": 0.7038536616143464,
+    "output_len": 346,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 37.28596198093146,
+    "ttft": 0.5088281631469727,
+    "tpot": 0.27034292150946226,
+    "output_len": 136,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 8.888102340511978,
+    "ttft": 1.2916500568389893,
+    "tpot": 0.9486190974712372,
+    "output_len": 8,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 278.75817746296525,
+    "ttft": 1.1062145233154297,
+    "tpot": 0.6673667579889297,
+    "output_len": 416,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 179.28620116319507,
+    "ttft": 0.5144476890563965,
+    "tpot": 0.2837212195472112,
+    "output_len": 630,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 275.6771922716871,
+    "ttft": 1.154238224029541,
+    "tpot": 0.6728074316884957,
+    "output_len": 408,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 271.66932067647576,
+    "ttft": 1.092310905456543,
+    "tpot": 0.6815083963744887,
+    "output_len": 397,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 286.53407392278314,
+    "ttft": 0.9292356967926025,
+    "tpot": 0.5711817140579224,
+    "output_len": 500,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 128.69268843065947,
+    "ttft": 0.2537808418273926,
+    "tpot": 0.3139837487694104,
+    "output_len": 409,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 9.916523755528033,
+    "ttft": 0.44270896911621094,
+    "tpot": 0.5917146503925323,
+    "output_len": 16,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 28.236825378611684,
+    "ttft": 0.2520139217376709,
+    "tpot": 0.33704447746276855,
+    "output_len": 83,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 159.6305330246687,
+    "ttft": 0.16316747665405273,
+    "tpot": 0.3108070449754741,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 20.627354166470468,
+    "ttft": 0.6984798908233643,
+    "tpot": 0.3064639531649076,
+    "output_len": 65,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 129.38805921375751,
+    "ttft": 0.9078080654144287,
+    "tpot": 0.3125545085201588,
+    "output_len": 411,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 286.05607488565147,
+    "ttft": 1.7762277126312256,
+    "tpot": 0.5551919424906373,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 154.80900637432933,
+    "ttft": 1.458052158355713,
+    "tpot": 0.9237299927745957,
+    "output_len": 166,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 195.13769864011556,
+    "ttft": 3.1552562713623047,
+    "tpot": 0.7527781374314252,
+    "output_len": 255,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 11.513713270425797,
+    "ttft": 0.6904544830322266,
+    "tpot": 0.46970463835674786,
+    "output_len": 23,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 176.40348602458835,
+    "ttft": 0.6461730003356934,
+    "tpot": 0.2843525799346973,
+    "output_len": 618,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 284.37309096660465,
+    "ttft": 2.1166279315948486,
+    "tpot": 0.5533994721431358,
+    "output_len": 510,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 88.83501084614545,
+    "ttft": 1.7749831676483154,
+    "tpot": 0.27115972539717537,
+    "output_len": 321,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 187.66211717296392,
+    "ttft": 2.954853057861328,
+    "tpot": 0.7695513069629669,
+    "output_len": 240,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 12.111468934454024,
+    "ttft": 2.9098989963531494,
+    "tpot": 0.5747342258691788,
+    "output_len": 16,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 249.45835020020604,
+    "ttft": 2.9077577590942383,
+    "tpot": 0.679159804809192,
+    "output_len": 363,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 186.99289686977863,
+    "ttft": 2.585604190826416,
+    "tpot": 0.2626526185929605,
+    "output_len": 702,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 145.50107184890658,
+    "ttft": 2.2289621829986572,
+    "tpot": 0.8898126960541151,
+    "output_len": 161,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 156.3829206340015,
+    "ttft": 1.9699974060058594,
+    "tpot": 0.3009367486422057,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 79.35926311649382,
+    "ttft": 1.2127585411071777,
+    "tpot": 0.2604302541414897,
+    "output_len": 300,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 155.5050854133442,
+    "ttft": 1.0902988910675049,
+    "tpot": 0.30093889859219974,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 27.30125108640641,
+    "ttft": 0.7931954860687256,
+    "tpot": 0.73613926437166,
+    "output_len": 36,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 154.24963126238436,
+    "ttft": 0.19219183921813965,
+    "tpot": 0.3002740198176274,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 154.3263651356101,
+    "ttft": 0.5531220436096191,
+    "tpot": 0.29968748083356295,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 279.7127863978967,
+    "ttft": 0.5142889022827148,
+    "tpot": 0.5474084540909412,
+    "output_len": 510,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 279.78670774865896,
+    "ttft": 0.4219529628753662,
+    "tpot": 0.5455966200679541,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 153.9187779314816,
+    "ttft": 0.33100247383117676,
+    "tpot": 0.29933397439952947,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 229.52065231837332,
+    "ttft": 2.774575710296631,
+    "tpot": 0.7019390720332,
+    "output_len": 323,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 40.13314801361412,
+    "ttft": 2.491523027420044,
+    "tpot": 0.24594728307786332,
+    "output_len": 153,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 4.714271134696901,
+    "ttft": 2.354069709777832,
+    "tpot": 0.23546643257141114,
+    "output_len": 10,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 266.6134907538071,
+    "ttft": 1.9738848209381104,
+    "tpot": 0.6615324729681015,
+    "output_len": 400,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 44.47379307821393,
+    "ttft": 1.9113638401031494,
+    "tpot": 0.2338087938644074,
+    "output_len": 182,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 27.764482252299786,
+    "ttft": 1.024787187576294,
+    "tpot": 0.6519716658243319,
+    "output_len": 41,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 27.310628387145698,
+    "ttft": 0.7740397453308105,
+    "tpot": 0.663142865896225,
+    "output_len": 40,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 275.1298029785976,
+    "ttft": 0.8192892074584961,
+    "tpot": 0.535709394607693,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 220.69787654746324,
+    "ttft": 1.2821152210235596,
+    "tpot": 0.7100214989054164,
+    "output_len": 309,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 231.9780637146905,
+    "ttft": 0.5159060955047607,
+    "tpot": 0.6888244599103928,
+    "output_len": 336,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 149.96279613580555,
+    "ttft": 0.38353824615478516,
+    "tpot": 0.2915359463608056,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 271.58176168520004,
+    "ttft": 0.2526376247406006,
+    "tpot": 0.5298450505360961,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 271.3854610370472,
+    "ttft": 0.1829988956451416,
+    "tpot": 0.5296065583825111,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 271.21673909015954,
+    "ttft": 2.1201605796813965,
+    "tpot": 0.5255510723218322,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 26.642455813474953,
+    "ttft": 1.9800851345062256,
+    "tpot": 0.25155916019361846,
+    "output_len": 98,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 131.133955209516,
+    "ttft": 1.5273010730743408,
+    "tpot": 0.9256847279412406,
+    "output_len": 140,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 151.27581030596048,
+    "ttft": 1.257725715637207,
+    "tpot": 0.285710084097726,
+    "output_len": 525,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 44.998491702601314,
+    "ttft": 1.1727614402770996,
+    "tpot": 0.23181725179076826,
+    "output_len": 189,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 20.922857427969575,
+    "ttft": 0.4652841091156006,
+    "tpot": 0.21299795558055243,
+    "output_len": 96,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 17.053459082730114,
+    "ttft": 0.3179464340209961,
+    "tpot": 0.2172432348325655,
+    "output_len": 77,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 33.05230246204883,
+    "ttft": 0.34184765815734863,
+    "tpot": 0.24583995790409863,
+    "output_len": 133,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 268.7973306896165,
+    "ttft": 1.149564504623413,
+    "tpot": 0.5226710811257362,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 268.3646376654506,
+    "ttft": 1.481980800628662,
+    "tpot": 0.5211871080100536,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 268.1331750685349,
+    "ttft": 1.2486846446990967,
+    "tpot": 0.5211896416731179,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 207.5649737501517,
+    "ttft": 1.0855953693389893,
+    "tpot": 0.7143972134507651,
+    "output_len": 289,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 13.388781829737127,
+    "ttft": 0.17316198348999023,
+    "tpot": 0.2492311900516726,
+    "output_len": 53,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 266.8157225390896,
+    "ttft": 1.020101547241211,
+    "tpot": 0.5190939400345087,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 27.20078862644732,
+    "ttft": 0.7073221206665039,
+    "tpot": 0.25964661439259845,
+    "output_len": 102,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 122.30711122509092,
+    "ttft": 0.7575769424438477,
+    "tpot": 0.3240819511413574,
+    "output_len": 375,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 13.729131070896983,
+    "ttft": 1.5667839050292969,
+    "tpot": 0.19604171860602596,
+    "output_len": 62,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 154.39644066616893,
+    "ttft": 1.521040678024292,
+    "tpot": 0.2799523841767084,
+    "output_len": 546,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 146.56837913766503,
+    "ttft": 1.5197629928588867,
+    "tpot": 0.28380775451660156,
+    "output_len": 511,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 25.429262506775558,
+    "ttft": 1.4760377407073975,
+    "tpot": 0.2370675790427935,
+    "output_len": 101,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 24.47202777210623,
+    "ttft": 1.369020938873291,
+    "tpot": 0.2356556191736338,
+    "output_len": 98,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 264.7242911430076,
+    "ttft": 1.2582271099090576,
+    "tpot": 0.5145619106478989,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 10.362625986337662,
+    "ttft": 1.0177209377288818,
+    "tpot": 0.20302422150321628,
+    "output_len": 46,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 22.0594151141122,
+    "ttft": 0.9300386905670166,
+    "tpot": 0.24558364790539408,
+    "output_len": 86,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 120.8769048936665,
+    "ttft": 0.52903151512146,
+    "tpot": 0.31830928439185735,
+    "output_len": 378,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 204.65425839927047,
+    "ttft": 0.3552274703979492,
+    "tpot": 0.704395786647139,
+    "output_len": 290,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 8.866444437764585,
+    "ttft": 0.25533080101013184,
+    "tpot": 0.661974833561824,
+    "output_len": 13,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 144.85868194978684,
+    "ttft": 1.6890897750854492,
+    "tpot": 0.27904304240414507,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 139.84178970009089,
+    "ttft": 0.8649954795837402,
+    "tpot": 0.28531684523000855,
+    "output_len": 487,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 261.87910643499345,
+    "ttft": 1.0842199325561523,
+    "tpot": 0.5103282480557138,
+    "output_len": 511,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 140.48637720756233,
+    "ttft": 1.0043041706085205,
+    "tpot": 0.8504253843935524,
+    "output_len": 164,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 261.1737274536863,
+    "ttft": 0.9122400283813477,
+    "tpot": 0.5082774613983929,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 119.33777440153062,
+    "ttft": 1.954371690750122,
+    "tpot": 0.9169659838080406,
+    "output_len": 128,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 259.4645435670391,
+    "ttft": 1.6031527519226074,
+    "tpot": 0.503582313656807,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 144.73048929590732,
+    "ttft": 0.21382784843444824,
+    "tpot": 0.28166422602261254,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 168.44323507137597,
+    "ttft": 0.5476770401000977,
+    "tpot": 0.7143663345499242,
+    "output_len": 235,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 5.228571297600865,
+    "ttft": 0.2813901901245117,
+    "tpot": 0.17033015448471595,
+    "output_len": 29,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 4.116325723938644,
+    "ttft": 0.26281285285949707,
+    "tpot": 0.3498064171184193,
+    "output_len": 11,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 112.75249933823943,
+    "ttft": 0.35736680030822754,
+    "tpot": 0.33343350285946083,
+    "output_len": 337,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 122.51336455717683,
+    "ttft": 0.8060214519500732,
+    "tpot": 0.32107829229812823,
+    "output_len": 379,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 255.81937522999942,
+    "ttft": 0.45614051818847656,
+    "tpot": 0.4987157047726214,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 145.02346668671817,
+    "ttft": 0.3506336212158203,
+    "tpot": 0.28196806796112955,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 15.550334706902504,
+    "ttft": 0.27515578269958496,
+    "tpot": 0.2544693191846212,
+    "output_len": 60,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 128.63604904711246,
+    "ttft": 0.22025561332702637,
+    "tpot": 0.3079047408892954,
+    "output_len": 417,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 155.7927618343383,
+    "ttft": 1.050699234008789,
+    "tpot": 0.7854292174886326,
+    "output_len": 197,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 94.11929520592093,
+    "ttft": 0.0885627269744873,
+    "tpot": 0.33220919703426294,
+    "output_len": 283,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 242.94485978595912,
+    "ttft": 0.2828025817871094,
+    "tpot": 0.6142660454858707,
+    "output_len": 395,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 154.9187024673447,
+    "ttft": 0.20387554168701172,
+    "tpot": 0.7893039219233454,
+    "output_len": 196,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 1.681014952249825,
+    "ttft": 1.2493550777435303,
+    "tpot": 0.14090569814046225,
+    "output_len": 3,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 20.59580112621188,
+    "ttft": 1.1991548538208008,
+    "tpot": 0.24856287088149634,
+    "output_len": 78,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 195.03132086806,
+    "ttft": 1.1682729721069336,
+    "tpot": 0.23724982817286816,
+    "output_len": 817,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 209.7977243810892,
+    "ttft": 1.1473889350891113,
+    "tpot": 0.21753696729045466,
+    "output_len": 959,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 142.6738355215639,
+    "ttft": 0.3428521156311035,
+    "tpot": 0.27738624938979717,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 31.68756591808051,
+    "ttft": 0.881502628326416,
+    "tpot": 0.6416307588418325,
+    "output_len": 48,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 27.570771360769868,
+    "ttft": 0.7919070720672607,
+    "tpot": 0.24118117169216946,
+    "output_len": 111,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 85.57202644459903,
+    "ttft": 1.9712250232696533,
+    "tpot": 0.3468332063113011,
+    "output_len": 241,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 249.72772684320807,
+    "ttft": 2.5298891067504883,
+    "tpot": 0.4817900936505948,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 235.9916863963008,
+    "ttft": 2.204524278640747,
+    "tpot": 0.6457791064984232,
+    "output_len": 362,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 141.00070058275014,
+    "ttft": 1.9195425510406494,
+    "tpot": 0.27105085752163716,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 15.003529153764248,
+    "ttft": 1.7746226787567139,
+    "tpot": 0.19442264122121475,
+    "output_len": 68,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 247.94754540547729,
+    "ttft": 0.8685481548309326,
+    "tpot": 0.4815579385552955,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 247.1878527617082,
+    "ttft": 0.24889159202575684,
+    "tpot": 0.4812944790540848,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 135.6275014579296,
+    "ttft": 3.3705828189849854,
+    "tpot": 0.8316899005721949,
+    "output_len": 159,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 246.43106013629586,
+    "ttft": 3.065185785293579,
+    "tpot": 0.47435093530205025,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 176.66404388658702,
+    "ttft": 1.2951366901397705,
+    "tpot": 0.2319228936124731,
+    "output_len": 756,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 243.23572603426874,
+    "ttft": 2.666947364807129,
+    "tpot": 0.507430934201816,
+    "output_len": 474,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 232.09220635239035,
+    "ttft": 2.2972540855407715,
+    "tpot": 0.6382701906892988,
+    "output_len": 360,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 231.34235615562648,
+    "ttft": 1.1686639785766602,
+    "tpot": 0.6305472295578212,
+    "output_len": 365,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 73.99846276361495,
+    "ttft": 0.1640465259552002,
+    "tpot": 0.34817302227020264,
+    "output_len": 212,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 113.44357723463327,
+    "ttft": 0.5851342678070068,
+    "tpot": 0.9645267837067955,
+    "output_len": 117,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 138.52004419546574,
+    "ttft": 0.49973630905151367,
+    "tpot": 0.2690012064593577,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 32.72329223994166,
+    "ttft": 0.2146317958831787,
+    "tpot": 0.2558887248902809,
+    "output_len": 127,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 2.5435185227543116,
+    "ttft": 0.17814254760742188,
+    "tpot": 0.13874119870802937,
+    "output_len": 17,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 14.36742727458477,
+    "ttft": 0.15592670440673828,
+    "tpot": 0.21519371596249667,
+    "output_len": 66,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 242.49734348338097,
+    "ttft": 1.1410551071166992,
+    "tpot": 0.4704400303303382,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 115.903988821432,
+    "ttft": 0.7385568618774414,
+    "tpot": 0.928666478203189,
+    "output_len": 124,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 108.92361277062446,
+    "ttft": 0.971949577331543,
+    "tpot": 0.3270794492779356,
+    "output_len": 330,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 136.8560323799029,
+    "ttft": 0.6658248901367188,
+    "tpot": 0.2644107920452229,
+    "output_len": 515,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 239.56964669097215,
+    "ttft": 0.8058273792266846,
+    "tpot": 0.4672140393938337,
+    "output_len": 511,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 231.53053674194962,
+    "ttft": 0.5116791725158691,
+    "tpot": 0.5579805771509806,
+    "output_len": 414,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 229.94839602336287,
+    "ttft": 0.5792746543884277,
+    "tpot": 0.574829644129091,
+    "output_len": 399,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 239.12157884705812,
+    "ttft": 0.4281332492828369,
+    "tpot": 0.4652243320472524,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 135.967462698929,
+    "ttft": 0.11709022521972656,
+    "tpot": 0.26478056926243954,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 251.36158289480954,
+    "ttft": 0.7247283458709717,
+    "tpot": 0.34679016193966594,
+    "output_len": 721,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 135.91181979887187,
+    "ttft": 0.3471710681915283,
+    "tpot": 0.26421336774472837,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 182.42389222513884,
+    "ttft": 0.47600245475769043,
+    "tpot": 0.6970524851846512,
+    "output_len": 261,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 238.19690770376474,
+    "ttft": 0.42046380043029785,
+    "tpot": 0.46344210158082244,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 181.65050708781928,
+    "ttft": 0.4005086421966553,
+    "tpot": 0.6997478091118419,
+    "output_len": 259,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 127.40293246880174,
+    "ttft": 0.4961733818054199,
+    "tpot": 0.8348380970327478,
+    "output_len": 152,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 153.25330834183842,
+    "ttft": 0.150956392288208,
+    "tpot": 0.24492468490600586,
+    "output_len": 625,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 17.03039773926139,
+    "ttft": 0.24055266380310059,
+    "tpot": 0.25048449857911065,
+    "output_len": 67,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 144.84832823928446,
+    "ttft": 1.0621161460876465,
+    "tpot": 0.733533901827676,
+    "output_len": 196,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 235.57040791772306,
+    "ttft": 2.154420852661133,
+    "tpot": 0.45674307472318587,
+    "output_len": 511,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 14.376478313468397,
+    "ttft": 0.12601613998413086,
+    "tpot": 0.2589496222409335,
+    "output_len": 55,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 5.121707543730736,
+    "ttft": 1.5423104763031006,
+    "tpot": 0.44652795791625977,
+    "output_len": 8,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 78.79863098822534,
+    "ttft": 0.14603090286254883,
+    "tpot": 0.3762678963145571,
+    "output_len": 209,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 11.811461239121854,
+    "ttft": 0.7155187129974365,
+    "tpot": 0.24645497534010147,
+    "output_len": 45,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 32.272209057584405,
+    "ttft": 0.5982849597930908,
+    "tpot": 0.31044723473343194,
+    "output_len": 102,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 232.4254183890298,
+    "ttft": 0.5917561054229736,
+    "tpot": 0.45188126229403314,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 73.96163917332888,
+    "ttft": 0.20000910758972168,
+    "tpot": 0.3706032774556222,
+    "output_len": 199,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 41.92354256939143,
+    "ttft": 0.1885538101196289,
+    "tpot": 0.9070738761321359,
+    "output_len": 46,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 17.623044536449015,
+    "ttft": 0.14567255973815918,
+    "tpot": 0.31198112453733173,
+    "output_len": 56,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 227.79327122308314,
+    "ttft": 1.014005422592163,
+    "tpot": 0.4908220236435597,
+    "output_len": 462,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 228.49054269399494,
+    "ttft": 0.932166337966919,
+    "tpot": 0.4810560167969911,
+    "output_len": 473,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 4.220750614069402,
+    "ttft": 0.16025686264038086,
+    "tpot": 0.16889108220736185,
+    "output_len": 24,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 43.52559116575867,
+    "ttft": 0.23696231842041016,
+    "tpot": 0.4161626031765571,
+    "output_len": 104,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 229.3647899441421,
+    "ttft": 1.270989179611206,
+    "tpot": 0.4445611575425949,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 155.388223355636,
+    "ttft": 1.047250509262085,
+    "tpot": 0.7211274387680482,
+    "output_len": 214,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 227.94327440392226,
+    "ttft": 0.5395183563232422,
+    "tpot": 0.44321390852825915,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 171.02275730576366,
+    "ttft": 0.4140625,
+    "tpot": 0.7049370275056066,
+    "output_len": 242,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 111.74286000803113,
+    "ttft": 0.23802804946899414,
+    "tpot": 0.30377858666048385,
+    "output_len": 367,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 226.3056039987132,
+    "ttft": 0.6248311996459961,
+    "tpot": 0.4416177818686528,
+    "output_len": 511,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 211.13590817712247,
+    "ttft": 0.23797059059143066,
+    "tpot": 0.6294493703699824,
+    "output_len": 335,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 38.963611625134945,
+    "ttft": 0.20449161529541016,
+    "tpot": 0.44529325386573526,
+    "output_len": 87,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 40.39356381446123,
+    "ttft": 0.3345210552215576,
+    "tpot": 0.4260808330901126,
+    "output_len": 94,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 52.4498826302588,
+    "ttft": 0.30562520027160645,
+    "tpot": 0.46537346286433084,
+    "output_len": 112,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 58.55888044834137,
+    "ttft": 0.25942492485046387,
+    "tpot": 0.4382235250974956,
+    "output_len": 133,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 224.7986220838502,
+    "ttft": 0.25435590744018555,
+    "tpot": 0.43764127300031935,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 73.48322339914739,
+    "ttft": 0.18548297882080078,
+    "tpot": 0.4116954053385874,
+    "output_len": 178,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 203.24966612271965,
+    "ttft": 0.1325521469116211,
+    "tpot": 0.665901062918491,
+    "output_len": 305,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 38.816295804455876,
+    "ttft": 1.2072396278381348,
+    "tpot": 0.4272959584539587,
+    "output_len": 88,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 50.78426165599376,
+    "ttft": 1.1001038551330566,
+    "tpot": 0.47309283983139766,
+    "output_len": 105,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 76.7643839661032,
+    "ttft": 0.7407803535461426,
+    "tpot": 0.39385597940553657,
+    "output_len": 193,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 128.49519571196288,
+    "ttft": 0.5932426452636719,
+    "tpot": 0.2492741371920699,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 52.637181086465716,
+    "ttft": 0.24077415466308594,
+    "tpot": 1.2183474052784056,
+    "output_len": 43,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 9.454519447870553,
+    "ttft": 0.12042570114135742,
+    "tpot": 0.38861923416455585,
+    "output_len": 24,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 208.42758438922465,
+    "ttft": 2.0288825035095215,
+    "tpot": 0.6016630890070523,
+    "output_len": 343,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 221.53967596124858,
+    "ttft": 1.6484699249267578,
+    "tpot": 0.4294388610869646,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 173.79853194579482,
+    "ttft": 1.5935771465301514,
+    "tpot": 0.7028204908176344,
+    "output_len": 245,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 126.83920401055366,
+    "ttft": 0.24072933197021484,
+    "tpot": 0.24673699821412678,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 227.0506169712171,
+    "ttft": 1.1145896911621094,
+    "tpot": 0.3667386367723539,
+    "output_len": 616,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 220.88949921168387,
+    "ttft": 2.7232325077056885,
+    "tpot": 0.42524206615098503,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 90.93907714448869,
+    "ttft": 1.991102933883667,
+    "tpot": 0.3305890409476695,
+    "output_len": 269,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 78.3243263727054,
+    "ttft": 2.418933153152466,
+    "tpot": 0.3738478533740114,
+    "output_len": 203,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 124.18815924972296,
+    "ttft": 1.47591233253479,
+    "tpot": 0.23916248178389105,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 47.85616820119321,
+    "ttft": 1.4907455444335938,
+    "tpot": 1.2876733938852947,
+    "output_len": 36,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 216.611944376491,
+    "ttft": 0.4366726875305176,
+    "tpot": 0.42970269432598746,
+    "output_len": 503,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 52.460579982958734,
+    "ttft": 0.21828198432922363,
+    "tpot": 0.41454137885381304,
+    "output_len": 126,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 56.55866913404316,
+    "ttft": 0.3054180145263672,
+    "tpot": 0.3960600587683664,
+    "output_len": 142,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 216.5744312684983,
+    "ttft": 0.2669832706451416,
+    "tpot": 0.4215692600079215,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 43.10714588034898,
+    "ttft": 0.23465275764465332,
+    "tpot": 0.48145497247074426,
+    "output_len": 89,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 122.13719941582531,
+    "ttft": 0.9180927276611328,
+    "tpot": 0.23625513591729178,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 198.26011637598276,
+    "ttft": 1.6055948734283447,
+    "tpot": 0.6405352963686766,
+    "output_len": 307,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 215.3513785637915,
+    "ttft": 1.5577325820922852,
+    "tpot": 0.41748308716341853,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 214.33688215911388,
+    "ttft": 0.661797046661377,
+    "tpot": 0.4164912719243219,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 12.351826942525804,
+    "ttft": 0.5142641067504883,
+    "tpot": 0.7394234389066696,
+    "output_len": 16,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 42.50077525153756,
+    "ttft": 0.19312596321105957,
+    "tpot": 0.4699777709113227,
+    "output_len": 90,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 121.21678963210434,
+    "ttft": 0.22506093978881836,
+    "tpot": 0.23581079572264912,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 110.64871099125594,
+    "ttft": 0.34539103507995605,
+    "tpot": 0.2638342026888469,
+    "output_len": 418,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 211.83176971320063,
+    "ttft": 1.5341730117797852,
+    "tpot": 0.4146941004420173,
+    "output_len": 507,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 97.04394456278533,
+    "ttft": 1.5465798377990723,
+    "tpot": 0.909321878069923,
+    "output_len": 105,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 209.04404807183892,
+    "ttft": 0.8050172328948975,
+    "tpot": 0.4302067924136958,
+    "output_len": 484,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 210.26121784560382,
+    "ttft": 0.7097470760345459,
+    "tpot": 0.4084454702819765,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 61.325387666001916,
+    "ttft": 0.3732728958129883,
+    "tpot": 0.40902140316547164,
+    "output_len": 149,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 80.71673963777721,
+    "ttft": 1.1979694366455078,
+    "tpot": 0.31669197424474466,
+    "output_len": 251,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 37.07716949377209,
+    "ttft": 0.7537188529968262,
+    "tpot": 1.5130447546641033,
+    "output_len": 24,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 68.09070895425975,
+    "ttft": 1.4711682796478271,
+    "tpot": 1.3593915627927196,
+    "output_len": 49,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 138.13197666686028,
+    "ttft": 2.3208131790161133,
+    "tpot": 0.7036034035559146,
+    "output_len": 193,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 97.17506022937596,
+    "ttft": 2.0998129844665527,
+    "tpot": 0.2662768083460191,
+    "output_len": 357,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 63.573652191087604,
+    "ttft": 1.5464496612548828,
+    "tpot": 1.3482512442961982,
+    "output_len": 46,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 118.85665442515165,
+    "ttft": 1.4201135635375977,
+    "tpot": 0.22932179924100637,
+    "output_len": 512,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 166.64219171646982,
+    "ttft": 1.081679105758667,
+    "tpot": 0.6543271503900822,
+    "output_len": 253,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 188.82718649320304,
+    "ttft": 0.22742414474487305,
+    "tpot": 0.5838490381329421,
+    "output_len": 323,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 196.93865490797907,
+    "ttft": 0.14028406143188477,
+    "tpot": 0.4764049289878864,
+    "output_len": 413,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 202.92533656675369,
+    "ttft": 0.36850428581237793,
+    "tpot": 0.4026617084298409,
+    "output_len": 503,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 40.21026917360723,
+    "ttft": 0.17324042320251465,
+    "tpot": 0.44470976458655465,
+    "output_len": 90,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 37.55534777324647,
+    "ttft": 0.20198535919189453,
+    "tpot": 0.47271312339396415,
+    "output_len": 79,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 50.57625689916313,
+    "ttft": 2.5782861709594727,
+    "tpot": 0.42467666938241605,
+    "output_len": 113,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 202.56729589495808,
+    "ttft": 2.907925605773926,
+    "tpot": 0.3898969544097781,
+    "output_len": 512,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 39.44403804466128,
+    "ttft": 2.1332781314849854,
+    "tpot": 0.4238781007853421,
+    "output_len": 88,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 25.53675603866577,
+    "ttft": 2.190363883972168,
+    "tpot": 0.6481822530428568,
+    "output_len": 36,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 31.58269194420427,
+    "ttft": 1.6359984874725342,
+    "tpot": 0.5025461972770044,
+    "output_len": 59,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 195.17507980111986,
+    "ttft": 2.214766263961792,
+    "tpot": 0.43454690666886064,
+    "output_len": 444,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 197.9937043627724,
+    "ttft": 4.548130035400391,
+    "tpot": 0.37849732014531023,
+    "output_len": 511,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 114.57018686737865,
+    "ttft": 0.10551118850708008,
+    "tpot": 0.22308897786205506,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 107.97616634797305,
+    "ttft": 3.89033842086792,
+    "tpot": 0.6846959716395328,
+    "output_len": 152,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 137.50022469554096,
+    "ttft": 0.3838210105895996,
+    "tpot": 0.20866778161790636,
+    "output_len": 657,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 179.4252076819539,
+    "ttft": 3.47904109954834,
+    "tpot": 0.5864343015352885,
+    "output_len": 300,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 158.99514103401452,
+    "ttft": 3.3667891025543213,
+    "tpot": 0.6224209394454956,
+    "output_len": 250,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 93.84791042283177,
+    "ttft": 0.9319746494293213,
+    "tpot": 0.24254753944456733,
+    "output_len": 383,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 32.79967161640525,
+    "ttft": 2.261960983276367,
+    "tpot": 0.37690168251225975,
+    "output_len": 81,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 62.626691973768175,
+    "ttft": 2.2439560890197754,
+    "tpot": 1.0977212168953636,
+    "output_len": 55,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 195.07351543102413,
+    "ttft": 2.0088415145874023,
+    "tpot": 0.3763172226807295,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 133.78747207578272,
+    "ttft": 0.20017790794372559,
+    "tpot": 0.2061132899037114,
+    "output_len": 648,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 98.80530872941017,
+    "ttft": 0.22909927368164062,
+    "tpot": 0.21332128997488972,
+    "output_len": 462,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 193.1233050459996,
+    "ttft": 0.5727109909057617,
+    "tpot": 0.37524428423385175,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 88.68517543096095,
+    "ttft": 1.9920427799224854,
+    "tpot": 0.2374706065818055,
+    "output_len": 365,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 192.55663247406483,
+    "ttft": 1.7682437896728516,
+    "tpot": 0.37181396884063067,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 78.76079160999507,
+    "ttft": 3.3393194675445557,
+    "tpot": 0.7773920236174593,
+    "output_len": 97,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 192.28052918799222,
+    "ttft": 3.1609621047973633,
+    "tpot": 0.3685656848706697,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 28.981255165301263,
+    "ttft": 2.733107328414917,
+    "tpot": 0.34078555912166447,
+    "output_len": 77,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 76.10049008205533,
+    "ttft": 2.6219685077667236,
+    "tpot": 0.25244960506347447,
+    "output_len": 291,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 32.038714966736734,
+    "ttft": 2.4690020084381104,
+    "tpot": 0.3359432816505432,
+    "output_len": 88,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 109.55761254113168,
+    "ttft": 2.42708158493042,
+    "tpot": 0.20873384215446011,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 108.79134677164257,
+    "ttft": 2.049518585205078,
+    "tpot": 0.20791900738870422,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 65.51795169617981,
+    "ttft": 2.984135150909424,
+    "tpot": 0.8564794847410019,
+    "output_len": 73,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 190.76949019916356,
+    "ttft": 2.9831185340881348,
+    "tpot": 0.36596823761105307,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 53.47656509745866,
+    "ttft": 2.285877227783203,
+    "tpot": 1.1127015352249146,
+    "output_len": 46,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 183.6578563582152,
+    "ttft": 1.9620921611785889,
+    "tpot": 0.43257867097854613,
+    "output_len": 420,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 14.160097581334412,
+    "ttft": 0.7266871929168701,
+    "tpot": 0.5593612293402354,
+    "output_len": 24,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 107.4147245772183,
+    "ttft": 0.6976516246795654,
+    "tpot": 0.20792221744158115,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 74.72030859440565,
+    "ttft": 1.6292870044708252,
+    "tpot": 0.777480754446476,
+    "output_len": 94,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 106.84596054814756,
+    "ttft": 0.2744100093841553,
+    "tpot": 0.2076559712779917,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 107.93502092175186,
+    "ttft": 0.24590730667114258,
+    "tpot": 0.20987500410098547,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 174.19307527970523,
+    "ttft": 1.2608213424682617,
+    "tpot": 0.514598433460508,
+    "output_len": 336,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 95.36353938933462,
+    "ttft": 0.7645583152770996,
+    "tpot": 0.6478607964842287,
+    "output_len": 146,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 88.75492562074214,
+    "ttft": 0.4792959690093994,
+    "tpot": 0.2147349272911276,
+    "output_len": 411,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 186.56790772918612,
+    "ttft": 1.8186521530151367,
+    "tpot": 0.36007352925648234,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 103.42111665103585,
+    "ttft": 1.665947675704956,
+    "tpot": 0.206355506943399,
+    "output_len": 493,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 70.04062596987933,
+    "ttft": 2.387050151824951,
+    "tpot": 0.7600288283958864,
+    "output_len": 89,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 149.44151540566236,
+    "ttft": 2.2224576473236084,
+    "tpot": 0.5888034362792969,
+    "output_len": 250,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 166.41071649361402,
+    "ttft": 1.7890138626098633,
+    "tpot": 0.16847351291140572,
+    "output_len": 976,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 18.6628376878798,
+    "ttft": 1.4427521228790283,
+    "tpot": 0.34424413204193116,
+    "output_len": 50,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 184.54396999441087,
+    "ttft": 2.2614688873291016,
+    "tpot": 0.35526456656279387,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 101.14915153384209,
+    "ttft": 2.22526478767395,
+    "tpot": 0.20142454722262693,
+    "output_len": 491,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 74.35608705878258,
+    "ttft": 1.3745369911193848,
+    "tpot": 0.21977425052458982,
+    "output_len": 332,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 182.66731672082096,
+    "ttft": 1.0466697216033936,
+    "tpot": 0.3539759146075035,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 102.30950114224106,
+    "ttft": 0.24727749824523926,
+    "tpot": 0.19891384145205016,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 102.15206161234528,
+    "ttft": 1.9187953472137451,
+    "tpot": 0.19532299878304465,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 100.88034361694008,
+    "ttft": 1.1393053531646729,
+    "tpot": 0.19436235083938808,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 100.99506892636418,
+    "ttft": 1.1004376411437988,
+    "tpot": 0.19392821580460928,
+    "output_len": 515,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 179.16216188203543,
+    "ttft": 0.3898777961730957,
+    "tpot": 0.34844620836640894,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 57.1908711232245,
+    "ttft": 1.422393560409546,
+    "tpot": 0.23327974694543305,
+    "output_len": 239,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 177.5801657224074,
+    "ttft": 1.6690044403076172,
+    "tpot": 0.34282293236046507,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 63.10061126574874,
+    "ttft": 1.2844996452331543,
+    "tpot": 0.6866942167282104,
+    "output_len": 90,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 177.17768933810294,
+    "ttft": 1.2665283679962158,
+    "tpot": 0.34282806138081395,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 100.12938623316586,
+    "ttft": 1.266042709350586,
+    "tpot": 0.5919253012377345,
+    "output_len": 167,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 97.93072026129812,
+    "ttft": 0.502856969833374,
+    "tpot": 0.1898737595095272,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 42.78890524059534,
+    "ttft": 1.0639729499816895,
+    "tpot": 0.9270618597666422,
+    "output_len": 45,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 78.0083652632311,
+    "ttft": 0.39162421226501465,
+    "tpot": 0.19444847823981953,
+    "output_len": 399,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 97.77595411427319,
+    "ttft": 0.2839667797088623,
+    "tpot": 0.18963554443552336,
+    "output_len": 514,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 176.51693235896528,
+    "ttft": 0.7858448028564453,
+    "tpot": 0.3424834749619631,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 159.59932709950954,
+    "ttft": 0.34365296363830566,
+    "tpot": 0.5152999984407888,
+    "output_len": 309,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 31.35737986303866,
+    "ttft": 0.43560242652893066,
+    "tpot": 0.28622197221826623,
+    "output_len": 108,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 39.5517538273707,
+    "ttft": 0.4338076114654541,
+    "tpot": 0.2754188524165624,
+    "output_len": 142,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 27.63591929525137,
+    "ttft": 0.3295750617980957,
+    "tpot": 0.2967105767001276,
+    "output_len": 92,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 64.46386788226664,
+    "ttft": 0.8125927448272705,
+    "tpot": 0.669908302708676,
+    "output_len": 95,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 95.84595768991858,
+    "ttft": 0.18721556663513184,
+    "tpot": 0.1897588556721097,
+    "output_len": 504,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 173.17782461829484,
+    "ttft": 3.611936569213867,
+    "tpot": 0.33041613887392757,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 173.09861767757684,
+    "ttft": 3.5320205688476562,
+    "tpot": 0.33042138733594273,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 134.4901677435264,
+    "ttft": 3.2778453826904297,
+    "tpot": 0.5582533745055503,
+    "output_len": 235,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 87.25306967366487,
+    "ttft": 1.937065601348877,
+    "tpot": 0.18746464121472706,
+    "output_len": 455,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 156.55351070221514,
+    "ttft": 0.9969463348388672,
+    "tpot": 0.46846007798091477,
+    "output_len": 332,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 94.01979293767363,
+    "ttft": 0.22446346282958984,
+    "tpot": 0.18277700788561133,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 93.96645895950496,
+    "ttft": 0.16613173484802246,
+    "tpot": 0.18277929075512506,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 169.49146730359644,
+    "ttft": 1.8076825141906738,
+    "tpot": 0.32676259118911116,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 146.39994264300913,
+    "ttft": 1.542445421218872,
+    "tpot": 0.5507426787691878,
+    "output_len": 263,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 41.4583990201354,
+    "ttft": 1.4143569469451904,
+    "tpot": 0.714909485408238,
+    "output_len": 56,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 19.207869213074446,
+    "ttft": 1.2835636138916016,
+    "tpot": 1.0539852591121899,
+    "output_len": 17,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 168.72947829961777,
+    "ttft": 1.8129639625549316,
+    "tpot": 0.32526017304284766,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 36.11918802186847,
+    "ttft": 1.8089144229888916,
+    "tpot": 0.7977589008420013,
+    "output_len": 43,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 53.830039059743285,
+    "ttft": 1.7499768733978271,
+    "tpot": 0.6350182818203438,
+    "output_len": 82,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 57.989781252108514,
+    "ttft": 1.6940627098083496,
+    "tpot": 0.6185354819664588,
+    "output_len": 91,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 150.6050632223487,
+    "ttft": 1.609144687652588,
+    "tpot": 0.5208600509416806,
+    "output_len": 286,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 168.39315027184784,
+    "ttft": 1.4777321815490723,
+    "tpot": 0.32526212593732984,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 95.31170713342726,
+    "ttft": 0.14028477668762207,
+    "tpot": 0.18547460303204333,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 59.25572867318988,
+    "ttft": 0.9322283267974854,
+    "tpot": 0.6074379657705625,
+    "output_len": 96,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 14.052156480960548,
+    "ttft": 0.5248417854309082,
+    "tpot": 0.3558064573689511,
+    "output_len": 38,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 29.262976380996406,
+    "ttft": 0.2056748867034912,
+    "tpot": 0.9368644375954905,
+    "output_len": 31,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 147.17067502439022,
+    "ttft": 0.41283392906188965,
+    "tpot": 0.5394818747744841,
+    "output_len": 272,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 95.0979295661673,
+    "ttft": 0.10106539726257324,
+    "tpot": 0.18513751401771114,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 99.3867899812758,
+    "ttft": 0.8262591361999512,
+    "tpot": 0.5630782617841448,
+    "output_len": 175,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 84.06195664778352,
+    "ttft": 0.5736608505249023,
+    "tpot": 0.18756398351004955,
+    "output_len": 445,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 165.39878402743489,
+    "ttft": 0.29271960258483887,
+    "tpot": 0.3230801515149977,
+    "output_len": 511,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 128.11473753210157,
+    "ttft": 1.7834336757659912,
+    "tpot": 0.5397972703998924,
+    "output_len": 234,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 150.16827149596065,
+    "ttft": 1.6751680374145508,
+    "tpot": 0.47437110876503846,
+    "output_len": 313,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 11.018708633258939,
+    "ttft": 0.3118116855621338,
+    "tpot": 0.4112933690731342,
+    "output_len": 26,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 165.13574425317347,
+    "ttft": 1.6520261764526367,
+    "tpot": 0.31863643830282645,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 97.93044168967754,
+    "ttft": 1.4571597576141357,
+    "tpot": 0.5575780455087651,
+    "output_len": 173,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 111.6961348252371,
+    "ttft": 0.18600869178771973,
+    "tpot": 0.17257602849611925,
+    "output_len": 646,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 55.80980670358986,
+    "ttft": 0.08925342559814453,
+    "tpot": 0.20038342390129035,
+    "output_len": 278,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 127.34237060323358,
+    "ttft": 0.8438625335693359,
+    "tpot": 0.16110901984439535,
+    "output_len": 785,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 143.52100475411862,
+    "ttft": 1.1561839580535889,
+    "tpot": 0.519529317417284,
+    "output_len": 274,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 94.0665988875553,
+    "ttft": 0.7872986793518066,
+    "tpot": 0.18174628532885576,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 153.10474369768053,
+    "ttft": 1.053868293762207,
+    "tpot": 0.40008448299608734,
+    "output_len": 380,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 138.30487628653646,
+    "ttft": 1.0357475280761719,
+    "tpot": 0.53826397821015,
+    "output_len": 255,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 17.83034406043589,
+    "ttft": 0.6457240581512451,
+    "tpot": 0.31810398013503466,
+    "output_len": 54,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 93.54891323391348,
+    "ttft": 0.5085580348968506,
+    "tpot": 0.18128041356627705,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 81.62337731663138,
+    "ttft": 0.8660688400268555,
+    "tpot": 0.5455872931995908,
+    "output_len": 148,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 93.52299633435905,
+    "ttft": 0.4866063594818115,
+    "tpot": 0.1812829199822558,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 145.15256023127586,
+    "ttft": 1.2681214809417725,
+    "tpot": 0.47325094201062856,
+    "output_len": 304,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 153.58213207311928,
+    "ttft": 2.4270617961883545,
+    "tpot": 0.37784642338752744,
+    "output_len": 400,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 60.48952236492187,
+    "ttft": 1.5094504356384277,
+    "tpot": 0.17973044441967476,
+    "output_len": 328,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 158.54752628784627,
+    "ttft": 0.7260153293609619,
+    "tpot": 0.30760801837690627,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 128.01568150799721,
+    "ttft": 0.5623626708984375,
+    "tpot": 0.5287863624541097,
+    "output_len": 241,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 91.03579752519727,
+    "ttft": 0.5992286205291748,
+    "tpot": 0.17624435415509615,
+    "output_len": 513,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 36.886565037071705,
+    "ttft": 0.5798978805541992,
+    "tpot": 0.21101527851681376,
+    "output_len": 172,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 157.41034757439047,
+    "ttft": 0.3736550807952881,
+    "tpot": 0.3060854689651995,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 87.66654427908361,
+    "ttft": 0.5158874988555908,
+    "tpot": 0.17018374893814325,
+    "output_len": 512,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 153.70004580263048,
+    "ttft": 1.784148931503296,
+    "tpot": 0.29608934664586833,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 27.44289697986096,
+    "ttft": 1.4574909210205078,
+    "tpot": 0.18165842636481866,
+    "output_len": 143,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 139.2793609481305,
+    "ttft": 1.564983606338501,
+    "tpot": 0.4343455958441605,
+    "output_len": 317,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 49.87131816148758,
+    "ttft": 1.3490393161773682,
+    "tpot": 0.17261524896180502,
+    "output_len": 281,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 139.16308266483247,
+    "ttft": 1.4482495784759521,
+    "tpot": 0.4343495323830975,
+    "output_len": 317,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 145.62613313738257,
+    "ttft": 0.8038027286529541,
+    "tpot": 0.3557801258358967,
+    "output_len": 407,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 74.20966519135982,
+    "ttft": 0.2549746036529541,
+    "tpot": 0.16429439809587268,
+    "output_len": 450,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 73.2809814112261,
+    "ttft": 0.09108257293701172,
+    "tpot": 0.16442507090193503,
+    "output_len": 445,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 89.17711785621941,
+    "ttft": 1.2362208366394043,
+    "tpot": 0.5081953134150864,
+    "output_len": 173,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 148.0962196784094,
+    "ttft": 0.9886860847473145,
+    "tpot": 0.28669201607360245,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 65.10431801062077,
+    "ttft": 0.6851711273193359,
+    "tpot": 0.4992913885634075,
+    "output_len": 129,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 127.70088454987854,
+    "ttft": 0.3222646713256836,
+    "tpot": 0.4860834265483245,
+    "output_len": 262,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 136.23808472137898,
+    "ttft": 1.4246220588684082,
+    "tpot": 0.3807875679037665,
+    "output_len": 354,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 1.3617479037493467,
+    "ttft": 0.9674944877624512,
+    "tpot": 0.12911327679951987,
+    "output_len": 3,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 82.80690254084766,
+    "ttft": 0.60573410987854,
+    "tpot": 0.1646887381712277,
+    "output_len": 499,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 145.5394958667457,
+    "ttft": 0.2946794033050537,
+    "tpot": 0.28306045773898414,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 132.02390998974442,
+    "ttft": 1.019852876663208,
+    "tpot": 0.4018013952699907,
+    "output_len": 326,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 83.211968540214,
+    "ttft": 0.17201948165893555,
+    "tpot": 0.1621446255594492,
+    "output_len": 512,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 15.528640886768699,
+    "ttft": 0.18781161308288574,
+    "tpot": 0.16485728243345854,
+    "output_len": 93,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 51.10805598832667,
+    "ttft": 0.3898763656616211,
+    "tpot": 0.1560089192023644,
+    "output_len": 325,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 80.23287661839277,
+    "ttft": 0.7284362316131592,
+    "tpot": 0.4999376063076955,
+    "output_len": 159,
+    "model": "model_4",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 40.334943001158535,
+    "ttft": 0.301455020904541,
+    "tpot": 0.16071550530123424,
+    "output_len": 249,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 66.7385587664321,
+    "ttft": 0.5583987236022949,
+    "tpot": 0.15824073638642233,
+    "output_len": 418,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 50.005071048624814,
+    "ttft": 0.6072731018066406,
+    "tpot": 0.15335849723460512,
+    "output_len": 322,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 11.252675629220903,
+    "ttft": 0.35884547233581543,
+    "tpot": 0.15774750363999518,
+    "output_len": 69,
+    "model": "model_1",
+    "error": ""
+  },
+  {
+    "success": true,
+    "latency": 141.68316775094718,
+    "ttft": 1.650399923324585,
+    "tpot": 0.27292762629934686,
+    "output_len": 513,
+    "model": "model_4",
+    "error": ""
+  }
+]

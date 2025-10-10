@@ -4,19 +4,20 @@
 
 Start redis server with docker:
 ```bash
-docker run --name my-redis -p 6379:6379 -d redis
+sudo docker run --name my-redis -p 6379:6379 -d redis
 ```
 
 Install redis-py with `pip install redis`.
 
 Test the redis server is running:
 ```bash
->>> import redis
->>> r = redis.Redis(host='localhost', port=6379, db=0)
->>> r.set('foo', 'bar')
-True
->>> r.get('foo')
-b'bar'
+sudo docker start my-redis
+```
+```bash
+import redis
+r = redis.Redis(host='localhost', port=6379, db=0)
+r.set('foo', 'bar')
+r.get('foo')
 ```
 
 ### Download sglang-mulit-model and kvcached
@@ -32,11 +33,11 @@ git clone https://github.com/ovg-project/kvcached.git
 
 1. Start a container running in the background.
 ```bash
-docker run -dit --gpus all --ipc=host --network=host \
-    -v `pwd`/sglang-multi-model:/sgl-workspace/sglang-multi-model/ \
+sudo docker run -dit --gpus all --ipc=host --network=host \
+    -v `pwd`/prism-research:/sgl-workspace/prism-research/ \
     -v `pwd`/kvcached:/sgl-workspace/kvcached \
-    -v ~/.cache/huggingface/:/root/.cache/huggingface \
-    --name dev-sglang-{your_name} \
+    -v `pwd`/data/lrc/cache/huggingface/:/root/.cache/huggingface \
+    --name dev-sglang \
     lmsysorg/sglang:v0.3.4.post2-cu121 bash
 ```
 If you are using H100 from the SGLang team, change the mount directory of `.cache`.
@@ -52,19 +53,32 @@ docker run -dit --gpus all --ipc=host --network=host \
 
 2. Login to the container.
 ```bash
-docker exec -it dev-sglang bash
+sudo docker start dev-sglang
+```
+```bash
+sudo docker exec -it dev-sglang bash
 ```
 
 ### Install sglang-multi-model and kvcached
 
 ```bash
-cd /sgl-workspace/sglang-multi-model
-pip install -e "python[all]"
+cd /sgl-workspace/prism-research/python
+pip install -e .
 # flashinfer has already been installed in the container
 # pip install flashinfer==0.1.6 -i https://flashinfer.ai/whl/cu121/torch2.4/
 
 cd /sgl-workspace/kvcached
 pip install -e .
+
+pip install tensordict --upgrade
+pip install redis
+pip install lm_eval
+python3 setup.py clean
+python3 setup.py install
+
+echo 'export HF_ENDPOINT="https://hf-mirror.com"' >> ~/.bashrc
+source ~/.bashrc
+huggingface-cli login
 ```
 
 ## Run multi-model tests
@@ -73,7 +87,7 @@ pip install -e .
 
 Launch server with model_path:
 ```bash
-cd benchmark/multi-model
+cd /sgl-workspace/prism-research/benchmark/multi-model
 python3 -m sglang.launch_multi_model_server --port 30000 --disable-cuda-graph --model-config-file ./model_configs/model_config_single.json --disable-radix-cache --enable-elastic-memory --use-kvcached-v0 --log-file ./server.log
 ```
 
@@ -86,7 +100,7 @@ python3 -m sglang.launch_multi_model_server --port 30000 --disable-cuda-graph --
 
 Run tests:
 ```bash
-cd benchmark/multi-model
+cd /sgl-workspace/prism-research/benchmark/multi-model
 python3 benchmark.py -n 1
 ```
 
@@ -95,6 +109,7 @@ python3 benchmark.py -n 1
 Multiple models need to be launched with a model config file.
 
 See [swap_2.json](./model_configs/swap_2.json) and [collocate.json](./model_configs/collocate.json) for examples.
+"init_placements"中每一项代表一个instance
 
 Note that: 
 - The `model_name` should be unique.
@@ -105,8 +120,36 @@ Note that:
 Launch server with
 
 ```bash
-cd benchmark/multi-model
-python3 -m sglang.launch_multi_model_server --model-config-file ./model_configs/swap_2.json  --disable-cuda-graph --disable-radix-cache --max-mem-usage 67.28 --enable-controller --enable-cpu-share-memory --enable-elastic-memory --use-kvcached-v0 --policy priority-multi-gpu --log-file ./server.log --async-loading
+cd /sgl-workspace/prism-research/benchmark/multi-model
+
+python3 -m sglang.launch_multi_model_server --port 30000 --model-config-file ./model_configs/swap_2.json  --disable-cuda-graph --disable-radix-cache --enable-controller --enable-cpu-share-memory --enable-elastic-memory --use-kvcached-v0 --policy simple-global --log-file ./server.log --async-loading
+
+python3 benchmark.py \
+  --base-url http://127.0.0.1:30000 \
+  --num-models 2 \
+  --num-gpus 4
+```
+
+```bash
+cd /sgl-workspace/prism-research/benchmark/multi-model
+
+python3 -m sglang.launch_multi_model_server --port 30000 --model-config-file ./model_configs/swap_4.json  --disable-cuda-graph --disable-radix-cache --enable-controller --enable-cpu-share-memory --enable-elastic-memory --use-kvcached-v0 --policy simple-global --log-file ./server.log --async-loading
+
+python3 benchmark.py \
+  --base-url http://127.0.0.1:30000 \
+  --num-models 4 \
+  --num-gpus 4
+```
+
+```bash
+cd /sgl-workspace/prism-research/benchmark/multi-model
+
+python3 -m sglang.launch_multi_model_server --port 30000 --model-config-file ./model_configs/swap_4.json  --disable-cuda-graph --disable-radix-cache --enable-controller --enable-cpu-share-memory --enable-elastic-memory --use-kvcached-v0 --policy tp-global --log-file ./server.log --async-loading
+
+python3 benchmark.py \
+  --base-url http://127.0.0.1:30000 \
+  --num-models 4 \
+  --num-gpus 4
 ```
 
 Options: 
@@ -162,7 +205,7 @@ Starting the server:
 ```bash
 python3 -m sglang.launch_multi_model_server \
   --model-config-file ./model_configs/4_gpu_2_model.json \
-  --host 127.0.0.1 --port 33333 \
+  --host 127.0.0.1 --port 30000 \
   --disable-cuda-graph --disable-radix-cache \
   --log-file server-logs/$(date +%m%d_%H%M)_ours_4_gpu_tp.log \
   --load-format dummy \
@@ -173,7 +216,7 @@ python3 -m sglang.launch_multi_model_server \
 Run test:
 ```bash
 python3 benchmark.py \
-  --base-url http://127.0.0.1:33333 \
+  --base-url http://127.0.0.1:30000 \
   --exp-name ours_4_gpu \
   --num-gpus 4 \
   --num-models 2 \

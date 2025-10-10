@@ -1,9 +1,7 @@
-import dataclasses
 import enum
-from typing import Optional
-
 import torch
-
+import dataclasses
+from typing import Optional
 from sglang.srt.managers.io_struct import MemoryUsage
 
 
@@ -16,14 +14,15 @@ class ModelState(enum.Enum):
 
 @dataclasses.dataclass
 class ModelInstanceState:
+    """ 维护实例激活状态/显存占用数据 """
     model_name: str
     model_path: str
     instance_idx: int
-    gpu_ids: list[int]  # for tensor parallelism > 1
+    gpu_ids: list[int] # TP > 1时，维护全部使用的GPU
     state: ModelState
     memory_usage: MemoryUsage
     init_memory_pool_size: float
-    num_vio_reqs: int = 0  # num of violated request in current window
+    num_vio_reqs: int = 0 # num of violated request in current window
 
     # for priority scheduling
     req_freq: float = float("-inf")
@@ -38,11 +37,10 @@ class ModelInstanceState:
         self.last_memory_pool_size: float = self.init_memory_pool_size
 
     def __str__(self):
-        total_memory = (
-            self.memory_usage.model_weights_memory
-            + self.memory_usage.memory_pool_memory
-        )
-        return f"Instance {self.instance_idx}: {self.state.name}, memory usage: {total_memory:.2f} GB, gpu_ids: {self.gpu_ids}, init_memory_pool_size: {self.init_memory_pool_size if self.init_memory_pool_size is not None else 'N/A'} GB"
+        total_memory = (self.memory_usage.model_weights_memory + self.memory_usage.memory_pool_memory)
+        return f"Instance {self.instance_idx}: {self.state.name}, \
+                memory usage: {total_memory:.2f} GB, gpu_ids: {self.gpu_ids}, \
+                init_memory_pool_size: {self.init_memory_pool_size if self.init_memory_pool_size is not None else 'N/A'} GB"
 
     def on_activate(self, memory_usage: MemoryUsage, gpu_id: Optional[int] = None):
         self.state = ModelState.ACTIVE
@@ -56,5 +54,6 @@ class ModelInstanceState:
 
 
 def get_gpu_memory_usage(gpu_id: int) -> float:
+    """ 获取指定GPU剩余显存（GB） """
     free_gpu_memory, _ = torch.cuda.mem_get_info(gpu_id)
     return free_gpu_memory / (1 << 30)

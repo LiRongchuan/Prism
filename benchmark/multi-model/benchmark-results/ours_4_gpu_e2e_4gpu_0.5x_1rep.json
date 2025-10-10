@@ -1,0 +1,14 @@
+{
+  "timestamp": "2025-10-02T21:47:38.747661",
+  "exp_name": "ours_4_gpu",
+  "num_gpus": 4,
+  "completed": 558,
+  "aborted": 0,
+  "request_throughput": 1.2451956836541866,
+  "input_throughput": 167.11061642675165,
+  "output_throughput": 372.66832323643877,
+  "mean_ttft_ms": 916.6996500398096,
+  "p99_ttft_ms": 3368.4204006195064,
+  "mean_tpot_ms": 403.12880982796855,
+  "p99_tpot_ms": 1158.1292593479104
+}

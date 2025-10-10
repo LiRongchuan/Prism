@@ -1,11 +1,11 @@
 import logging
 from abc import abstractmethod
 from typing import Dict, List
-
 from sglang.multi_model.scheduling.action import BaseAction
-from sglang.multi_model.scheduling.model_queue_tracker import ModelQueueTracker, Req
 from sglang.multi_model.scheduling.policy.base import BasePolicy
-from sglang.multi_model.scheduling.state import ModelInstanceState, ModelState
+from sglang.multi_model.scheduling.state import ModelInstanceState
+from sglang.multi_model.scheduling.model_queue_tracker import ModelQueueTracker, Req
+
 
 logger = logging.getLogger(__name__)
 

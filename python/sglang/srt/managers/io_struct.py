@@ -371,11 +371,13 @@ class AbortReq:
 
 @dataclass
 class MemoryUsage:  # in GB
-    total_used_memory: float  # total used memory is higher than model_weights_memory + memory_pool_memory due to pytorch allocator cache
-    model_weights_memory: float
-    memory_pool_memory: float
-    req_to_token_pool_memory: float
-    token_to_kv_pool_memory: float
+    """ 维护不同来源显存占用 """
+    # total used memory is higher than model_weights_memory + memory_pool_memory due to pytorch allocator cache
+    total_used_memory: float        # 总占用显存
+    model_weights_memory: float     # 权重占用显存
+    memory_pool_memory: float       # 运行预留显存（激活值）
+    req_to_token_pool_memory: float # 输入阶段预留显存（tokenize）
+    token_to_kv_pool_memory: float  # KV-Cache预留显存
 
     def to_dict(self):
         return dataclasses.asdict(self)
