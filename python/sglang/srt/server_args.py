@@ -24,6 +24,8 @@ from dataclasses import field
 from typing import Any, Dict, List, Optional
 
 from sglang.srt.utils import is_flashinfer_available, is_ipv6, is_port_available
+from sglang.multi_model.multi_model_server_args import MultiModelServerArgs, InstanceConfig
+
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +66,7 @@ class ServerArgs:
     max_total_tokens: Optional[int] = None
     max_mem_usage: Optional[float] = None
     max_memory_pool_size: Optional[float] = None
+    max_num_reqs: int = 512
     chunked_prefill_size: int = 8192
     max_prefill_tokens: int = 16384
     schedule_policy: str = "lpm"
@@ -236,9 +239,7 @@ class ServerArgs:
         if self.enable_worker_pool:
             # worker id cannot be None
             if self.worker_id is None:
-                raise ValueError(
-                    "worker_id must be provided when enable_worker_pool is True"
-                )
+                raise ValueError("worker_id must be provided when enable_worker_pool is True")
             # if not self.worker_pool_model_configs:
             #     raise ValueError("worker_pool_model_configs must be provided when enable_worker_pool is True")
 
@@ -251,8 +252,8 @@ class ServerArgs:
 
     @staticmethod
     def from_multi_model_server_args(
-        multi_model_server_args: "MultiModelServerArgs",
-        instance_config: Optional["InstanceConfig"] = None,
+        multi_model_server_args: MultiModelServerArgs,
+        instance_config: Optional[InstanceConfig] = None,
         worker_id: Optional[int] = None,
     ):
         keys_to_remove = {
@@ -264,11 +265,14 @@ class ServerArgs:
             "max_memory_pool_size",
             "tp_size",
             "enable_controller",
-            "enable_cpu_share_memory",
             "enable_gpu_scheduler",
+            "enable_model_scheduler",
             "policy",
             "enable_model_service",
             "num_model_service_workers",
+            "enable_mixed_chunk",
+            "chunked_prefill_size",
+            "enable_cpu_share_memory",
         }
         # remove keys to remove in multi_model_server_args
         multi_model_server_args = vars(multi_model_server_args).copy()
@@ -286,6 +290,8 @@ class ServerArgs:
                 tp_size=instance_config.tp_size,
                 max_memory_pool_size=instance_config.max_memory_pool_size,
                 on=instance_config.on,
+                chunked_prefill_size=instance_config.chunked_prefill_size,
+                enable_mixed_chunk=instance_config.enable_mixed_chunk,
                 **multi_model_server_args,
             )
 
@@ -447,6 +453,12 @@ class ServerArgs:
             default=ServerArgs.max_memory_pool_size,
             help="The maximum memory that the memory pool can use. If not specified, it will be automatically calculated based on the mem-fraction-static.",
         )
+        parser.add_argument(
+            "--max_num_reqs",
+            type=int,
+            default=ServerArgs.max_num_reqs,
+            help="The approximated maximum number of running requests. If not specified, it will be set to 512.",
+        )        
         parser.add_argument(
             "--on",
             type=bool,
@@ -918,6 +930,7 @@ class PortArgs:
 
     # The ipc filename for controller to receive inputs from scheduler (zmq)
     controller_ipc_name: Optional[str] = None
+    model_scheduler_ipc_name: Optional[str] = None
 
     @staticmethod
     def init_new(server_args) -> "PortArgs":
@@ -939,6 +952,7 @@ class PortArgs:
         start_port: int,
         request_handler_ipc_name: str,
         controller_ipc_name: Optional[str] = None,
+        model_scheduler_ipc_name: Optional[str] = None
     ) -> "PortArgs":
         port = start_port + 1
         while True:
@@ -951,6 +965,7 @@ class PortArgs:
             scheduler_input_ipc_name=tempfile.NamedTemporaryFile(delete=False).name,
             detokenizer_ipc_name=tempfile.NamedTemporaryFile(delete=False).name,
             controller_ipc_name=controller_ipc_name,
+            model_scheduler_ipc_name=model_scheduler_ipc_name,
             nccl_port=port,
         )
 

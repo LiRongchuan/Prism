@@ -38,6 +38,7 @@ class Placement:
     gpu_ids: List[int]  # for TP > 1
     on: bool = True
     max_memory_pool_size: Optional[float] = None
+    max_num_reqs: Optional[int] = None
 
 
 @dataclasses.dataclass
@@ -60,10 +61,12 @@ class ModelConfig:
                 model_name=self.model_name,
                 model_path=self.model_path,
                 tokenizer_path=self.tokenizer_path,
-                gpu_ids=placement["gpu_ids"],
                 tp_size=self.tp_size,
+                gpu_ids=placement["gpu_ids"],
                 on=placement.get("on", True),
                 max_memory_pool_size=placement.get("max_memory_pool_size", None),
+                enable_mixed_chunk=placement.get("enable_mixed_chunk", False),
+                chunked_prefill_size=placement.get("chunked_prefill_size", 8192),
             )
             for placement in self.init_placements
         ]
@@ -74,10 +77,12 @@ class InstanceConfig:
     model_name: str
     model_path: str
     tokenizer_path: Optional[str] = None
-    gpu_ids: List[int] = field(default_factory=list)
     tp_size: int = 1
+    gpu_ids: List[int] = field(default_factory=list)
     on: bool = True
     max_memory_pool_size: Optional[float] = None
+    enable_mixed_chunk: bool = False
+    chunked_prefill_size: int = 8192
 
 
 def load_model_configs(file_path: str) -> List[ModelConfig]:
@@ -123,7 +128,7 @@ class MultiModelServerArgs:
     max_total_tokens: Optional[int] = None
     max_mem_usage: Optional[float] = None
     max_memory_pool_size: Optional[float] = None
-    chunked_prefill_size: int = 8192
+    chunked_prefill_size: Optional[int] = 8192
     max_prefill_tokens: int = 16384
     schedule_policy: str = "lpm"
     schedule_conservativeness: float = 1.0
@@ -164,7 +169,8 @@ class MultiModelServerArgs:
     redis_db: int = 0
     enable_controller: bool = False
     enable_gpu_scheduler: bool = False
-    policy: str = "simple-global"
+    enable_model_scheduler: bool = False
+    policy: str = "baseline"
     queue_id: str = str(uuid.uuid4().hex)
 
     # Async loading
@@ -212,7 +218,7 @@ class MultiModelServerArgs:
     enable_model_service: bool = False
     num_model_service_workers: int = 1
     abort_exceed_slos: bool = False
-
+    
     def __post_init__(self):
         if self.model_path is not None:
             # set missing default values, for the single model case
@@ -313,15 +319,12 @@ class MultiModelServerArgs:
 
         if self.queue_id is None:
             self.queue_id = str(uuid.uuid4().hex)
-        if self.enable_gpu_scheduler:
+        if self.enable_gpu_scheduler or self.enable_model_scheduler: # 不能同时开
             self.frontend_generate_request_key_prefix = (
                 f"frontend_generate_request_{self.queue_id}"
             )
             self.backend_generate_request_key_prefix = (
                 f"backend_generate_request_{self.queue_id}"
-            )
-            self.engine_to_gpu_scheduler_key_prefix = (
-                f"engine_to_gpu_scheduler_{self.queue_id}"
             )
         else:
             self.frontend_generate_request_key_prefix = (
@@ -330,9 +333,9 @@ class MultiModelServerArgs:
             self.backend_generate_request_key_prefix = (
                 f"generate_request_{self.queue_id}"
             )
-            self.engine_to_gpu_scheduler_key_prefix = (
-                f"engine_to_gpu_scheduler_{self.queue_id}"
-            )
+        self.engine_to_gpu_scheduler_key_prefix = (
+            f"engine_to_gpu_scheduler_{self.queue_id}"
+        )
 
     @staticmethod
     def add_cli_args(parser: argparse.ArgumentParser):
@@ -800,6 +803,11 @@ class MultiModelServerArgs:
             help="Enable GPU scheduler for multi-model serving.",
         )
         parser.add_argument(
+            "--enable-model-scheduler",
+            action="store_true",
+            help="Enable model scheduler for multi-model serving.",
+        )
+        parser.add_argument(
             "--disable-cuda-graph",
             action="store_true",
             help="Disable cuda graph.",
@@ -908,8 +916,10 @@ class MultiModelServerArgs:
             "--policy",
             type=str,
             choices=[
-                "simple-global",
-                "tp-global"
+                "baseline",
+                "tp-global",
+                "resize-global",
+                "simple-global"
             ],
             default=MultiModelServerArgs.policy,
             help="The policy for multi-model scheduling.",

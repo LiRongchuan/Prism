@@ -5,18 +5,22 @@ import os
 import signal
 import threading
 import time
+import multiprocessing as mp
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict
 from datetime import datetime
+from types import SimpleNamespace
 from typing import Any, Dict, List, Optional, Union
 
 import aiohttp
 import torch
 import zmq
 
-from sglang.multi_model.scheduling.policy.simple_global import SimpleGlobalPolicy
+from sglang.multi_model.scheduling.policy.baseline import BaselinePolicy
 from sglang.multi_model.scheduling.policy.tp_global import TPGlobalPolicy
+from sglang.multi_model.scheduling.policy.resize_global import ResizeGlobalPolicy
+from sglang.multi_model.scheduling.policy.simple_global import SimpleGlobalPolicy
 from sglang.multi_model.multi_model_server_args import MultiModelServerArgs
 from sglang.multi_model.scheduling.action import BaseAction
 from sglang.multi_model.scheduling.constants import (
@@ -33,6 +37,7 @@ from sglang.srt.managers.io_struct import (
     BatchRunReq,
     FinishReq,
     GenerateReqInput,
+    GetMemoryUsageReqOutput,
     MemoryUsage,
     UpdateModelTput,
 )
@@ -59,12 +64,13 @@ class GlobalController:
         self.server_args = server_args
         context = zmq.Context(2)
         self.recv_from_request_handler = context.socket(zmq.PULL)
-        self.recv_from_request_handler.bind(
-            f"ipc://{recv_from_request_handler_ipc_name}"
-        )
-
+        self.recv_from_request_handler.bind(f"ipc://{recv_from_request_handler_ipc_name}")
         self.recv_from_schedulers = context.socket(zmq.PULL)
         self.recv_from_schedulers.bind(f"ipc://{recv_from_schedulers_ipc_name}")
+        if server_args.enable_model_scheduler:
+            self.send_to_model_scheduler = context.socket(zmq.PUSH)
+            self.send_to_model_scheduler.connect(f"ipc://controller_to_model_scheduler")
+        else: self.send_to_model_scheduler = SimpleNamespace(send_pyobj=lambda obj, flags: None)
 
         self._shutdown_event = threading.Event()
 
@@ -72,24 +78,21 @@ class GlobalController:
         self.model_names_to_model_paths = model_names_to_model_paths
 
         # Information that helps the policy make scheduling decisions
-        self.model_queues = {
-            model_name: ModelQueueTracker(model_name) for model_name in self.models
-        }
+        self.model_queues: Dict[str, ModelQueueTracker] = {model_name: ModelQueueTracker(model_name) for model_name in self.models}
         self.model_queues_lock = threading.Lock()
 
         self.enable_worker_pool = self.server_args.enable_worker_pool
 
         # Compute the number of GPUs dynamically using a set
+        self.model_instance_state_dict = self._init_model_instance_state_dict(
+            engine_info_dict, self.enable_worker_pool, init_placements
+        )
+        self.send_to_model_scheduler.send_pyobj(self.model_instance_state_dict, flags=zmq.NOBLOCK)
         if not self.enable_worker_pool:
-            self.model_instance_state_dict = self._init_model_instance_state_dict(
-                engine_info_dict, self.enable_worker_pool, init_placements
-            )
-            models: List[ModelInstanceState] = sum(
-                self.model_instance_state_dict.values(), []
-            )
+            instances: List[ModelInstanceState] = sum(self.model_instance_state_dict.values(), [])
             # NOTE(ke): For TP case, only consider rank0 state
-            # gpu_ids = set([mod.gpu_ids[0] for mod in models])
-            gpu_ids = set(g for mod in models for g in mod.gpu_ids)
+            gpu_ids = set([mod.gpu_ids[0] for mod in instances])
+            # gpu_ids = set(g for mod in models for g in mod.gpu_ids)
             self.gpu_ids = list(gpu_ids)
         else:
             self.gpu_ids = list(range(self.server_args.num_gpus))
@@ -103,7 +106,7 @@ class GlobalController:
         
         start_mem_check = time.time()
         gpu_available_memory = {}
-        for gpu_id in range(len(self.gpu_ids)):
+        for gpu_id in self.gpu_ids:
             torch.cuda.set_device(gpu_id)
             gpu_available_memory[gpu_id] = get_available_gpu_memory("cuda", gpu_id)
             logger.info(f"GPU {gpu_id}, memory: {gpu_available_memory[gpu_id]:.2f} GB")
@@ -126,19 +129,11 @@ class GlobalController:
             for model_entry in model_config:
                 model_name = model_entry["model_name"]
                 model_path = model_entry["model_path"]
-                assert (
-                    model_path in model_weights_info
-                ), f"Model path '{model_path}' not found in model_weights_info"
-                self.model_weights_info_after_renamed[model_name] = model_weights_info[
-                    model_path
-                ]
-
-        self.model_instance_state_dict = self._init_model_instance_state_dict(
-            engine_info_dict, self.enable_worker_pool, init_placements
-        )
+                assert (model_path in model_weights_info), f"Model path '{model_path}' not found in model_weights_info"
+                self.model_weights_info_after_renamed[model_name] = model_weights_info[model_path]
 
         # Initialize scheduling policy
-        if self.server_args.policy == "simple-global":
+        if server_args.policy == "simple-global":
             self.policy = SimpleGlobalPolicy(
                 num_gpus=len(self.gpu_ids),
                 gpu_mem=gpu_mem,
@@ -150,16 +145,24 @@ class GlobalController:
                 num_gpus=len(self.gpu_ids),
                 gpu_mem=gpu_mem,
                 model_weights_info=self.model_weights_info_after_renamed,
-                workers_per_gpu=self.server_args.workers_per_gpu,
+                workers_per_gpu=self.server_args.workers_per_gpu if self.enable_worker_pool else -1,
+            )
+        elif self.server_args.policy == "resize-global":
+            self.policy = ResizeGlobalPolicy(
+                num_gpus=len(self.gpu_ids),
+                gpu_mem=gpu_mem,
+                model_weights_info=self.model_weights_info_after_renamed,
+                workers_per_gpu=self.server_args.workers_per_gpu if self.enable_worker_pool else -1,
             )
         else:
-            raise ValueError(f"Unknown policy: {self.server_args.policy}")
-
+            self.policy = BaselinePolicy(
+                num_gpus=len(self.gpu_ids),
+                gpu_mem=gpu_mem,
+                model_weights_info=self.model_weights_info_after_renamed,
+                workers_per_gpu=self.server_args.workers_per_gpu if self.enable_worker_pool else -1,
+            )
         logger.info(f"Using policy: {self.policy.__class__.__name__}")
-
-        self._start_run_policy = (
-            threading.Event()
-        )  # waiting for the first generate request
+        self._start_run_policy = threading.Event() # waiting for the first generate request
         # background thread to update the queue info
         self.queue_update_thread = threading.Thread(target=self.run_queue_update_loop)
         self.queue_update_thread.start()
@@ -206,10 +209,11 @@ class GlobalController:
         self,
         recv_reqs: List[
             Union[
-                GenerateReqInput,
-                FinishReq,
-                BatchRunReq,
                 BatchRetractDecodeReq,
+                BatchRunReq,
+                FinishReq,
+                GenerateReqInput,
+                GetMemoryUsageReqOutput,
                 UpdateModelTput,
             ]
         ],
@@ -217,39 +221,35 @@ class GlobalController:
         """Process incoming requests and update model queue states."""
         model_names = set()
         for recv_req in recv_reqs:
-            if isinstance(recv_req, GenerateReqInput):
+            if isinstance(recv_req, BatchRetractDecodeReq):
+                self.model_queues[recv_req.model].preempt_reqs(recv_req)
+                model_names.add(recv_req.model)
+            elif isinstance(recv_req, BatchRunReq):
+                self.model_queues[recv_req.model].start_running_reqs(recv_req)
+                model_names.add(recv_req.model)
+            elif isinstance(recv_req, FinishReq):
+                if not recv_req.is_warmup:
+                    self.model_queues[recv_req.model].finish_req(recv_req)
+                    model_names.add(recv_req.model)
+            elif isinstance(recv_req, GenerateReqInput):
                 if not recv_req.is_warmup and not self._start_run_policy.is_set():
                     self._start_run_policy.set()
                 try:
                     self.model_queues[recv_req.model].enqueue_req(recv_req)
                     model_names.add(recv_req.model)
                 except Exception as e:
-                    logger.error(f"Error enqueuing request: {recv_req}, recv_req.model: {recv_req.model}, self.model_queues.keys(): {self.model_queues.keys()}")
-            elif isinstance(recv_req, BatchRunReq):
-                self.model_queues[recv_req.model].start_running_reqs(recv_req)
-                model_names.add(recv_req.model)
-            elif isinstance(recv_req, BatchRetractDecodeReq):
-                self.model_queues[recv_req.model].preempt_reqs(recv_req)
-                model_names.add(recv_req.model)
-            elif isinstance(recv_req, FinishReq):
-                if not recv_req.is_warmup:
-                    self.model_queues[recv_req.model].finish_req(recv_req)
-                    model_names.add(recv_req.model)
+                    logger.error(f"Error enqueuing request: {recv_req}, recv_req.model: {recv_req.model}, self.model_queues.keys(): {self.model_queues.keys()}")                    
+            elif isinstance(recv_req, GetMemoryUsageReqOutput):
+                memory_usage = recv_req.memory_usage
+                for instance in self.model_instance_state_dict[recv_req.model_name]:
+                    instance.update_memory_usage(memory_usage)
             elif isinstance(recv_req, UpdateModelTput):
                 # Update the token throughput for the model
                 model_name = recv_req.model_name
-                assert (
-                    model_name in self.model_queues
-                ), f"Model {model_name} not found in model_queues"
-                self.model_queues[model_name].latest_token_tput = (
-                    recv_req.latest_token_tput
-                )
-                self.model_queues[model_name].prefill_token_tput = (
-                    recv_req.prefill_token_tput
-                )
-                self.model_queues[model_name].decode_token_tput = (
-                    recv_req.decode_token_tput
-                )
+                assert (model_name in self.model_queues), f"Model {model_name} not found in model_queues"
+                self.model_queues[model_name].latest_token_tput = (recv_req.latest_token_tput)
+                self.model_queues[model_name].prefill_token_tput = (recv_req.prefill_token_tput)
+                self.model_queues[model_name].decode_token_tput = (recv_req.decode_token_tput)
             else:
                 raise ValueError(f"Unknown request type: {type(recv_req)}")
         # Log queue information for models with new requests
@@ -269,10 +269,8 @@ class GlobalController:
             with self.model_queues_lock:
                 # Deep copy is not thread-safe, so we do it within the lock
                 model_queues_cpy = copy.deepcopy(self.model_queues)
-
-            actions = self.policy.gen_actions(
-                model_queues_cpy, self.model_instance_state_dict
-            )
+            self.send_to_model_scheduler.send_pyobj(self.model_instance_state_dict, flags=zmq.NOBLOCK)
+            actions = self.policy.gen_actions(model_queues_cpy, self.model_instance_state_dict)
             if len(actions) > 0:
                 exec_start = time.time()
                 self.execute_actions(actions)
@@ -286,13 +284,7 @@ class GlobalController:
         """Execute a list of scheduling actions in parallel."""
         tic = time.time()
         threads = ThreadPoolExecutor(max_workers=len(actions))
-        futures = [
-            threads.submit(
-                action.execute, self.server_args.url(), self.model_instance_state_dict
-            )
-            for action in actions
-        ]
-
+        futures = [ threads.submit(action.execute, self.server_args.url(), self.model_instance_state_dict) for action in actions]
         # Wait for all actions to complete
         for future in futures:
             try:
@@ -302,14 +294,12 @@ class GlobalController:
 
         threads.shutdown()
         toc = time.time()
-        logger.info(
-            f"Executed {len(actions)} actions in {toc - tic:.2f} seconds. Actions: {actions}"
-        )
+        logger.info(f"Executed {len(actions)} actions in {toc - tic:.2f} seconds. Actions: {actions}")
         self.print_model_instance_state_dict()
 
     def _init_model_instance_state_dict(
         self, engine_info_dict, enable_worker_pool, init_placements
-    ):
+    ) -> Dict[str, List[ModelInstanceState]]:
         """Initialize model instance state dictionary based on engine information."""
         if not enable_worker_pool:
             model_instance_state_dict = defaultdict(list)
@@ -442,16 +432,15 @@ class GlobalController:
                 gpu_id = mod.gpu_ids[0]
                 
                 if mod.state == ModelState.ACTIVE:
-                    # mod_on_gpu[m_name] = gpu_id
-                    mod_on_gpu[m_name] = [gpu_id]
+                    mod_on_gpu[m_name] = gpu_id
                     if m_name not in gpu_active_models[gpu_id]:
                         gpu_active_models[gpu_id].append(m_name)
                     # 对TP分块
-                    # gpu_active_weights[gpu_id] += model_weights_info_after_renamed[m_name]["model_size"]
-                    # logger.debug(f"Model {m_name} is active on GPU {gpu_id}, weight added: {model_weights_info_after_renamed[m_name]['model_size']}")
-                    weight_block_size = model_weights_info_after_renamed[m_name]["model_size"] / len(mod.gpu_ids)
-                    gpu_active_weights[gpu_id] += weight_block_size
-                    logger.debug(f"Model {m_name} is active on GPU {gpu_id}, weight added: {weight_block_size}")
+                    gpu_active_weights[gpu_id] += model_weights_info_after_renamed[m_name]["model_size"]
+                    logger.debug(f"Model {m_name} is active on GPU {gpu_id}, weight added: {model_weights_info_after_renamed[m_name]['model_size']}")
+                    # weight_block_size = model_weights_info_after_renamed[m_name]["model_size"] / len(mod.gpu_ids)
+                    # gpu_active_weights[gpu_id] += weight_block_size
+                    # logger.debug(f"Model {m_name} is active on GPU {gpu_id}, weight added: {weight_block_size}")
                 else:
                     mod_on_gpu[m_name] = [-1]
 
@@ -462,15 +451,15 @@ class GlobalController:
                 mod_total_req_len[m_name] = mod_running_req_len[m_name] + mod_q_waiting_len[m_name]
 
                 # Calculate GPU request distribution
-                # if isinstance(mod_on_gpu[m_name], list): 
-                #     gpu_id = mod_on_gpu[m_name][0]
-                # else:
-                #     gpu_id = mod_on_gpu[m_name]
-                # if gpu_id >= 0:
-                #         gpu_requests[gpu_id] += mod_total_req_len[m_name]
-                for gpu_id in mod_on_gpu[m_name]:
-                    if gpu_id >= 0:
+                if isinstance(mod_on_gpu[m_name], list): 
+                    gpu_id = mod_on_gpu[m_name][0]
+                else:
+                    gpu_id = mod_on_gpu[m_name]
+                if gpu_id >= 0:
                         gpu_requests[gpu_id] += mod_total_req_len[m_name]
+                # for gpu_id in mod_on_gpu[m_name]:
+                #     if gpu_id >= 0:
+                #         gpu_requests[gpu_id] += mod_total_req_len[m_name]
 
             # Calculate memory per request for each GPU
             for gpu_id in self.gpu_ids:
@@ -538,9 +527,7 @@ def run_controller_process(
 ):
     """Run the global controller process."""
     controller = None
-    configure_logger(
-        server_args, prefix=" GlobalController", log_file_suffix="global_controller"
-    )
+    configure_logger(server_args, prefix=" GlobalController", log_file_suffix="global_controller")
 
     try:
         controller = GlobalController(

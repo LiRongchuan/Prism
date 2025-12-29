@@ -1,11 +1,10 @@
-import dataclasses
-import logging
 import time
+import logging
+import dataclasses
+from enum import Enum
 from collections import deque
 from datetime import timedelta
-from enum import Enum
 from typing import List, Optional
-
 from sglang.srt.managers.io_struct import (
     BatchRetractDecodeReq,
     BatchRunReq,
@@ -31,24 +30,19 @@ class Req:
     arrival_time: Optional[float] = None
     slo: Optional[float] = None
     model: Optional[str] = None
-    prompt_len: Optional[int] = None
-    output_len: Optional[int] = None
-
+    prompt_len: int = 128
+    output_len: int = 128
     # running
     start_running_time: Optional[float] = None
     gpu_id: Optional[int] = None
-
     # preempted
     preempted_time: Optional[float] = None
     generated_output_len: Optional[int] = None
-
+    # budget
     finish_time: Optional[float] = None
     _left_exec_time: Optional[float] = None # 预计剩余结束时间
     remaining_time_budget: Optional[float] = None
-    last_exec_tstamp: float = float(
-        "-inf"
-    )  # last time when _left_exec_time was updated
-
+    last_exec_tstamp: float = float("-inf")  # last time when _left_exec_time was updated
     state: ReqState = ReqState.WAITING
     is_warmup: bool = False
 
@@ -58,10 +52,8 @@ class Req:
         if self._left_exec_time is None:
             # if a request's output length is None, we use default value 512
             # TODO: change to a more accurate way of estimating the left execution time
-            if self.output_len is None:
-                self._left_exec_time = 512 * 0.02
-            else:
-                self._left_exec_time = self.output_len * 0.02
+            if self.output_len is None: self._left_exec_time = 512 * 0.02
+            else: self._left_exec_time = self.output_len * 0.02
         return self._left_exec_time
 
     @left_exec_time.setter
@@ -79,9 +71,7 @@ class Req:
     ):
         """到达请求更新"""
         if self.state == ReqState.WAITING:
-            logger.warning(
-                f"Request {self.rid} (arrival_time: {arrival_time}) is already in waiting state. New arrival time: {arrival_time}"
-            )
+            logger.warning(f"Request {self.rid} (arrival_time: {arrival_time}) is already in waiting state. New arrival time: {arrival_time}")
         self.arrival_time = arrival_time
         self.slo = slo
         self.model = model
@@ -115,21 +105,14 @@ class ModelQueueTracker:
         self.received_reqs: dict[str, Req] = {}  # rid -> Req对象映射关系
         self.waiting_reqs: deque[Req] = deque()
         self.running_reqs: List[Req] = []
-
         self._last_arrival_time = float("-inf")
         self._last_finished_time = float("-inf")
         self.start_time = time.time()
 
-        # XXX, MMY: Throughput tracking
-        self.latest_token_tput = 0.0  # PD total throughput
-        self.prefill_token_tput = 0.0  # Prefill throughput
-        self.decode_token_tput = 0.0  # Decode throughput
-
     def _get_req_from_queue(self, queue: deque[Req], rid: str) -> Optional[Req]:
         """Helper method to find and remove a request from a queue."""
         req = next((r for r in queue if r.rid == rid), None)
-        if req is not None:
-            queue.remove(req)
+        if req is not None: queue.remove(req)
         return req
 
     def _update_req_in_queue(self, queue: deque[Req], req: Req):
@@ -158,7 +141,6 @@ class ModelQueueTracker:
             self.received_reqs[generate_req.rid] = req
             if not generate_req.is_warmup:
                 self.waiting_reqs.append(req)
-            
             # 只对非warmup请求更新最后到达时间
             if generate_req.is_warmup is False: 
                 self._last_arrival_time = max(
@@ -176,26 +158,18 @@ class ModelQueueTracker:
                 generate_req.is_warmup,
             )
             self.received_reqs[generate_req.rid] = req
-
-            if req.state == ReqState.RUNNING:
-                self._update_req_in_queue(self.running_reqs, req)
-
+            if req.state == ReqState.RUNNING: self._update_req_in_queue(self.running_reqs, req)
             # 只对非warmup请求更新最后到达时间
             if req.is_warmup is False:
-                self._last_arrival_time = max(
-                    self._last_arrival_time, generate_req.arrival_time
-                )
-                
+                self._last_arrival_time = max(self._last_arrival_time, generate_req.arrival_time)
             if req.is_warmup:
                 state = req.state
-                if state == ReqState.RUNNING:
-                    self._get_req_from_queue(self.running_reqs, req.rid)
+                if state == ReqState.RUNNING: self._get_req_from_queue(self.running_reqs, req.rid)
 
     def start_running_reqs(self, batch_run_req: BatchRunReq):
         """批请求开始运行"""
         for rid in batch_run_req.rids:
             req = self.received_reqs.get(rid)
-
             if req is None:
                 # Handle new request
                 req = Req(rid=rid)
@@ -204,12 +178,8 @@ class ModelQueueTracker:
                 self.running_reqs.append(req)
                 self.received_reqs[rid] = req
                 continue
-
-            if req.is_warmup:
-                continue
-
+            if req.is_warmup: continue
             req.update_running_info(batch_run_req.run_time, batch_run_req.gpu_id)
-
             if (req.state == ReqState.WAITING) or (
                 req.state == ReqState.PREEMTED
                 and req.start_running_time > req.preempted_time
@@ -218,14 +188,11 @@ class ModelQueueTracker:
                 if waiting_req:
                     waiting_req.set_state(ReqState.RUNNING)
                     self.running_reqs.append(waiting_req)
-                else:
-                    raise ValueError(f"Request {rid} not found in waiting queue")
-
+                else: raise ValueError(f"Request {rid} not found in waiting queue")
             elif req.state == ReqState.PREEMTED:  # preempted before running
                 self._update_req_in_queue(self.waiting_reqs, req)
             elif req.state == ReqState.RUNNING:
                 self._update_req_in_queue(self.running_reqs, req)
-
             self.received_reqs[rid] = req
 
     def preempt_reqs(self, batch_retract_decode_req: BatchRetractDecodeReq):
@@ -235,20 +202,10 @@ class ModelQueueTracker:
             """批请求准备抢占"""
             req = self.received_reqs.get(rid)
             if req is None:
-                raise ValueError(
-                    f"Received preempt request {rid} for model {self.model_name} not found in received requests"
-                )
-
-            if req.is_warmup:
-                continue
-
-            req.update_preempt_info(
-                batch_retract_decode_req.retract_time, len_output_id
-            )
-            if (
-                req.state == ReqState.RUNNING
-                and req.start_running_time <= req.preempted_time
-            ):
+                raise ValueError(f"Received preempt request {rid} for model {self.model_name} not found in received requests")
+            if req.is_warmup: continue
+            req.update_preempt_info(batch_retract_decode_req.retract_time, len_output_id)
+            if (req.state == ReqState.RUNNING and req.start_running_time <= req.preempted_time):
                 running_req = self._get_req_from_queue(self.running_reqs, rid)
                 if running_req:
                     running_req.set_state(ReqState.PREEMTED)
@@ -260,7 +217,6 @@ class ModelQueueTracker:
             elif req.state == ReqState.WAITING:
                 req.set_state(ReqState.PREEMTED)
                 self._update_req_in_queue(self.waiting_reqs, req)
-
             self.received_reqs[rid] = req
 
     def finish_req(self, finish_req: FinishReq):
@@ -273,16 +229,13 @@ class ModelQueueTracker:
             req.update_finish_info(finish_req.finish_time)
             self.received_reqs[rid] = req
         else:
-            if req.is_warmup:
-                return
+            if req.is_warmup: return
             if req.state == ReqState.RUNNING:
                 req = self._get_req_from_queue(self.running_reqs, rid)
             elif req.state == ReqState.WAITING or req.state == ReqState.PREEMTED:
                 req = self._get_req_from_queue(self.waiting_reqs, rid)
-
             req.update_finish_info(finish_req.finish_time)
             self.received_reqs[rid] = req
-
         self._last_finished_time = finish_req.finish_time
         return
 
@@ -300,9 +253,7 @@ class ModelQueueTracker:
             elif self.waiting_reqs[0].state == ReqState.PREEMTED:
                 return self.waiting_reqs[0].preempted_time
             else:
-                logger.warning(
-                    f"Request {self.waiting_reqs[0].rid} in waiting queue is in {self.waiting_reqs[0].state} state"
-                )
+                logger.warning(f"Request {self.waiting_reqs[0].rid} in waiting queue is in {self.waiting_reqs[0].state} state")
         return float("inf")
 
     def get_num_waiting_reqs(self) -> int:
@@ -313,6 +264,15 @@ class ModelQueueTracker:
 
     def get_num_unfinished_reqs(self) -> int:
         return self.get_num_waiting_reqs() + self.get_num_running_reqs()
+    
+    def get_num_waiting_tokens(self) -> int:
+        return sum([req.prompt_len + req.output_len for req in self.waiting_reqs]) # 根据计算需求调整
+    
+    def get_num_running_tokens(self) -> int:
+        return sum([req.prompt_len + req.output_len for req in self.running_reqs]) # 根据计算需求调整
+    
+    def get_num_unfinished_tokens(self) -> int:
+        return self.get_num_waiting_tokens() + self.get_num_running_tokens()
 
     def __str__(self):
         last_finish_time_ref = (

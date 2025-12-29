@@ -1,0 +1,30 @@
+[
+    {
+        "model_name": "model_1",
+        "model_path": "mistralai/Mistral-7B-Instruct-v0.2",
+        "tp_size": 1,
+        "init_placements": [
+            {
+                "gpu_ids": [2],
+                "on": true,
+                "max_memory_pool_size": 10,
+                "enable_mixed_chunk": true,
+                "chunked_prefill_size": 256
+            }
+        ]
+    },
+    {
+        "model_name": "model_2",
+        "model_path": "mistralai/Mistral-7B-Instruct-v0.2",
+        "tp_size": 1,
+        "init_placements": [
+            {
+                "gpu_ids": [2],
+                "on": true,
+                "max_memory_pool_size": 10,
+                "enable_mixed_chunk": true,
+                "chunked_prefill_size": 256
+            }
+        ]
+    }
+]

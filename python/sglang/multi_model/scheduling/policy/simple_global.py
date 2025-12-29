@@ -42,7 +42,7 @@ class SimpleGlobalPolicy(GlobalPolicy):
         self.model_request_tracker = ModelRequestTracker(window_size_seconds=30)
 
         self.MEMORY_POOL_BUDGET = 6
-        self.MODEL_IDLE_THRESHOLD = 50  # seconds
+        self.MODEL_IDLE_THRESHOLD = 5  # seconds
         self.VIOLATION_PROPORTION_THRESHOLD = 0.1 # 10%
         self.MEMORY_PER_REQUEST_RATIO_THRESHOLD = 15
 
@@ -392,9 +392,8 @@ class SimpleGlobalPolicy(GlobalPolicy):
             返回迁移方案[(model_name, instance_idx, target_gpu_id)]
         """
         self.memory_history.update_memory_history(
-            gpu_to_model_mapping, 
-            model_queues, 
-            gpu_available_memory,
+            gpu_to_model_mapping,
+            model_queues,
             self.model_weights_info,
             self.gpu_mem
         )
@@ -733,6 +732,7 @@ class SimpleGlobalPolicy(GlobalPolicy):
                 model_instance_to_action_dict.setdefault(target_instance_key, []).append(
                     ActivateAction(
                         model_name=model_name,
+                        # TODO: 是否合理？
                         instance_idx=target_gpu_id,
                         memory_pool_size=self.MEMORY_POOL_BUDGET,
                         gpu_id=target_gpu_id,

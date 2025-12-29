@@ -174,9 +174,7 @@ class DetokenizerManager:
                 self.send_to_request_handler.send_pyobj(recv_obj)
                 continue
             elif isinstance(recv_obj, ActivateReqOutput):
-                logger.info(
-                    f"Detokenizer: Received activate request for {recv_obj.model_name}"
-                )
+                logger.info(f"Detokenizer: Received activate request for {recv_obj.model_name}")
                 self._reinit_tokenizer(recv_obj.model_name)
                 self.send_to_request_handler.send_pyobj(recv_obj)
                 continue

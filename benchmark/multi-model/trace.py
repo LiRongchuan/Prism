@@ -1,14 +1,14 @@
-import dataclasses
 import os
 import pickle
-from collections import Counter
-from typing import Optional
-
+import dataclasses
 import numpy as np
+from typing import Optional
+from collections import Counter
 
 
 @dataclasses.dataclass
 class Request:
+    """ 单个请求对象 """
     req_id: str
     prompt: str
     prompt_len: int
@@ -25,8 +25,7 @@ class TraceConfig:
     micro_benchmark: bool = False
     e2e_benchmark: bool = False
     synthetic: bool = False
-    # for micro benchmark and e2e benchmark
-    replication: int = 1
+    replication: int = 1 # 可以重复测
     time_scale: float = 1
 
     model_paths: list[str] = dataclasses.field(default_factory=list)
@@ -79,7 +78,6 @@ def generate_synthetic_reqs(
     np.random.seed(config.seed)
 
     num_reqs = int(config.req_rate * config.duration)
-
     # generate model path and tokenizer path
     if config.sequential:
         # generate model path and tokenizer path sequentially, i.e. first num_reqs // num_models reqs use model 0, next num_reqs // num_models reqs use model 1, etc.
@@ -89,9 +87,7 @@ def generate_synthetic_reqs(
         remaining_reqs = num_reqs % num_models
         if remaining_reqs > 0:
             # assign the remaining reqs to the last model
-            model_indices = np.concatenate(
-                [model_indices, [num_models - 1] * remaining_reqs]
-            )
+            model_indices = np.concatenate([model_indices, [num_models - 1] * remaining_reqs])
     else:
         probs = np.random.power(config.alpha, num_reqs)
         num_models = len(config.model_paths)
@@ -114,9 +110,7 @@ def generate_synthetic_reqs(
     if print_model_req_rate:
         print("request_rates before on_off")
         for i in range(num_models - 1, -1, -1):
-            print(
-                f"{config.model_paths[i]}: {np.sum(model_indices == i) / config.duration:.2f}"
-            )
+            print(f"{config.model_paths[i]}: {np.sum(model_indices == i) / config.duration:.2f}")
         print("\n")
 
     # for on_off pattern, default on_off models is the last on_off_model_percentage models
@@ -157,6 +151,8 @@ def generate_synthetic_reqs(
             arrival_time=timestamps[i],
             model=model,
             slo=config.slo,
+            slo_ttft=config.slo_ttft,
+            slo_tpot=config.slo_tpot,
         )
         requests.append(req)
         model_num_requests[model] += 1
@@ -209,6 +205,8 @@ def generate_synthetic_reqs_sequential(
             arrival_time=timestamps[i],
             model=config.model_paths[model_indices[i]],
             slo=config.slo,
+            slo_ttft=config.slo_ttft,
+            slo_tpot=config.slo_tpot,
         )
         requests.append(req)
     return requests
@@ -243,8 +241,14 @@ class RealWorldTrace:
     def generate_e2e_benchmark_reqs_18m(self, config, num_models=18):
         time_scale = config.time_scale
         replication = config.replication
-
-        selected_ranks = [5,10,4,17,2,10,23,2,10,14,19,14,18,14,21,2,6,19]
+        # 0: 前半程活跃
+        # 2: 全程活跃
+        # 4: 后半程一般
+        # 5: 全程一般
+        # 10: 后半程活跃
+        # 其他稀疏
+        selected_ranks = [0, 10]
+        # selected_ranks = [5,10,4,17,2,10,23,2,10,14,19,14,18,14,21,2,6,19][:num_models]
         model_list = [f"model_{i+1}" for i in range(len(selected_ranks))]
         model_to_rank = dict(zip(model_list, selected_ranks))
 
@@ -257,7 +261,7 @@ class RealWorldTrace:
         forward_ranks = {14, 19}  # shift earlier
         backward_ranks = {2, 10}  # shift later
 
-        # Count each model's position per rank
+        # 指定rank中，每个模型的位次
         rank_model_position = defaultdict(dict)
         for rank, models in rank_to_models.items():
             for index, model in enumerate(models):
@@ -272,7 +276,7 @@ class RealWorldTrace:
             "model_13": 0.03568530083, "model_14": 0.03531268835, "model_15": 0.04233850479, "model_16": 0.02106617689,
             "model_17": 0.03062166691, "model_18": 0.04841831684,
         }
-
+        model_ttft_slo_baseline_p95 = {"model_1": 0.03867427111, "model_2": 0.0606341815}
         model_tpot_slo_baseline_p95 = {
             "model_1": 6.938047111, "model_2": 6.70813661, "model_3": 6.111749992, "model_4": 10.81588957,
             "model_5": 6.990488146, "model_6": 6.845023713, "model_7": 12.60465384, "model_8": 6.939990897,
@@ -280,12 +284,13 @@ class RealWorldTrace:
             "model_13": 7.62432434, "model_14": 5.667404957, "model_15": 8.504742742, "model_16": 5.001050144,
             "model_17": 5.441103017, "model_18": 8.66446155,
         }
-
+        model_tpot_slo_baseline_p95 = {"model_1": 6.938047111, "model_2": 12.60465384}
+        
         tpot_slo_scale = config.tpot_slo_scale
         ttft_slo_scale = config.ttft_slo_scale
 
         model_ttft_slo = {k: v * ttft_slo_scale for k, v in model_ttft_slo_baseline_p95.items()}
-        model_tpot_slo = {k: v * tpot_slo_scale for k, v in model_tpot_slo_baseline_p95.items()}
+        model_tpot_slo = {k: v * tpot_slo_scale / 1000 for k, v in model_tpot_slo_baseline_p95.items()}
 
         selected_models = set(model_list)
         if config.dedicated_model is not None:
@@ -314,21 +319,23 @@ class RealWorldTrace:
                     shift_index = rank_model_position[req_rank][model]
 
                     for _ in range(replication):
+                        # 同一rank的请求会对该rank所有模型发送，根据模型位次调整到达时间，避免积压
                         arrival_time = req.req_time * time_scale
-
-                        if req_rank in forward_ranks:
+                        if req_rank in forward_ranks: # 提前
                             arrival_time -= 10 * shift_index
-                        elif req_rank in backward_ranks:
+                        elif req_rank in backward_ranks: # 滞后
                             arrival_time += 10 * shift_index
-
                         slo_ttft = model_ttft_slo[model]
                         slo_tpot = model_tpot_slo[model]
-
+                        # workload_scale = np.random
                         processed_request = Request(
                             req_id=str(req_count),
-                            prompt=req.prompt,
-                            prompt_len=req.prompt_len,
-                            output_len=req.output_len,
+                            # prompt=req.prompt,
+                            # prompt_len=req.prompt_len,
+                            # output_len=req.output_len,
+                            prompt=dummy_prompt(int(1.5 * req.prompt_len)),
+                            prompt_len=int(1.5 * req.prompt_len),
+                            output_len=int(1.5 * req.output_len),
                             arrival_time=arrival_time,
                             model=model,
                             slo=slo_ttft,
@@ -337,11 +344,9 @@ class RealWorldTrace:
                         )
                         selected_requests.append(processed_request)
                         req_count += 1
-
             except Exception as e:
                 print(f"ERROR in processing request: {e}")
                 continue
-
         print(f"DEBUG: Total selected models: {selected_models}")
         print(f"DEBUG: Total matched ranks: {matched_ranks_count}")
         print(f"DEBUG: Total selected requests: {len(selected_requests)}")
@@ -379,12 +384,8 @@ class RealWorldTrace:
 
         tpot_slo_scale = config.tpot_slo_scale
         ttft_slo_scale = config.ttft_slo_scale
-        model_ttft_slo = {
-            k: v * ttft_slo_scale for k, v in model_ttft_slo_baseline_p95.items()
-        }
-        model_tpot_slo = {
-            k: v * tpot_slo_scale for k, v in model_tpot_slo_baseline_p95.items()
-        }
+        model_ttft_slo = {k: v * ttft_slo_scale for k, v in model_ttft_slo_baseline_p95.items()}
+        model_tpot_slo = {k: v * tpot_slo_scale / 1000 for k, v in model_tpot_slo_baseline_p95.items()}
 
         selected_requests = []
         for req in self.requests:
@@ -394,7 +395,7 @@ class RealWorldTrace:
                 if model_paths is not None and this_model not in model_paths:
                     continue
 
-                for i in range(replication):
+                for _ in range(replication):
                     arrival_time = req.req_time * time_scale
                     slo, slo_ttft, slo_tpot = model_ttft_slo[model_mapping[req_rank]], model_ttft_slo[model_mapping[req_rank]], model_tpot_slo[model_mapping[req_rank]]
                     if not arrival_time or not slo or not slo_ttft or not slo_tpot:
@@ -447,12 +448,8 @@ class RealWorldTrace:
 
         tpot_slo_scale = config.tpot_slo_scale
         ttft_slo_scale = config.ttft_slo_scale
-        model_ttft_slo = {
-            k: v * ttft_slo_scale for k, v in model_ttft_slo_baseline_p95.items()
-        }
-        model_tpot_slo = {
-            k: v * tpot_slo_scale for k, v in model_tpot_slo_baseline_p95.items()
-        }
+        model_ttft_slo = {k: v * ttft_slo_scale for k, v in model_ttft_slo_baseline_p95.items()}
+        model_tpot_slo = {k: v * tpot_slo_scale / 1000 for k, v in model_tpot_slo_baseline_p95.items()}
 
         # we only keep the mapping of config.model_id
         if config.dedicated_model is not None:

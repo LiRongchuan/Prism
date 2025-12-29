@@ -26,7 +26,7 @@ import time
 import warnings
 from collections import deque
 from types import SimpleNamespace
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -58,13 +58,14 @@ from sglang.srt.managers.io_struct import (
     GetMemoryUsageReqOutput,
     GetMemPoolSizeReq,
     GetMemPoolSizeReqOutput,
+    MemoryUsage,
     PreemptMode,
     ProfileReq,
+    ResizeChunkInput,
     ResizeMemPoolReqInput,
-    TokenizedEmbeddingReqInput,
     TokenizedGenerateReqInput,
-    TokenizedRewardReqInput,
     UpdateModelTput,
+    UpdateQueueStats,
     UpdateWeightReqInput,
     UpdateWeightReqOutput,
 )
@@ -111,8 +112,7 @@ test_retract = os.getenv("SGLANG_TEST_RETRACT", "false") == "true"
 
 
 class Scheduler:
-    """A scheduler that manages a tensor parallel GPU worker."""
-
+    """ TP-worker调度器 """
     def __init__(
         self,
         server_args: ServerArgs,
@@ -128,8 +128,11 @@ class Scheduler:
     ):
         # Parse args
         self.server_args = server_args
+        self.port_args = port_args
         self.gpu_id = gpu_id
         self.tp_rank = tp_rank
+        self.model_name = server_args.model_name
+        self.instance_idx = getattr(server_args, "instance_idx", 0)        
         self.tp_size = server_args.tp_size
         self.schedule_policy = server_args.schedule_policy
         self.disable_regex_jump_forward = server_args.disable_regex_jump_forward
@@ -143,52 +146,56 @@ class Scheduler:
         self.engine_id = engine_id
         self.input_queue = input_queue
         self.output_queue = output_queue
-
-        # Init inter-process communication
+        # 通信通道初始化
         if port_args.controller_ipc_name:
             context = zmq.Context(4)
         else:
             context = zmq.Context(3)
-
-        # Store IPC file paths for cleanup
         self.ipc_files = set()
-        self.port_args = port_args
-
-        if self.tp_rank == 0:
-            # for receiving non-generation requests
+        if self.tp_rank == 0: # 仅在rank 0处理请求
+            # 接收非生成请求
             self.recv_from_request_handler = context.socket(zmq.PULL)
             self.ipc_files.add(f"ipc://{port_args.scheduler_input_ipc_name}")
-            self.recv_from_request_handler.bind(
-                f"ipc://{port_args.scheduler_input_ipc_name}"
-            )
+            self.recv_from_request_handler.bind(f"ipc://{port_args.scheduler_input_ipc_name}")
+            # 接收GPU worker结果
             self.recv_from_gpu_scheduler = context.socket(zmq.PULL)
             worker_id = server_args.worker_id
             ipc_name = f"gpu_scheduler_{self.gpu_id}_to_worker_{worker_id}"
             self.ipc_files.add(f"ipc://{ipc_name}")
             self.recv_from_gpu_scheduler.bind(f"ipc://{ipc_name}")
-            logger.info(f"Scheduler: Worker {worker_id} bound to {ipc_name}")
-            # for receiving generation requests
-            self.redis_client = RedisClient(
-                server_args.redis_host, server_args.redis_port, server_args.redis_db
-            )
+            # 接收model scheduler信息
+            self.recv_from_model_scheduler = context.socket(zmq.PULL)
+            ipc_name = "model_scheduler_to_scheduler"
+            self.ipc_files.add(f"ipc://{ipc_name}")
+            self.recv_from_model_scheduler.bind(f"ipc://{ipc_name}")
+            # 接收生成任务
+            self.redis_client = RedisClient(server_args.redis_host, server_args.redis_port, server_args.redis_db)
+            # 生成token -> Detokenizer
             self.send_to_detokenizer = context.socket(zmq.PUSH)
             self.send_to_detokenizer.connect(f"ipc://{port_args.detokenizer_ipc_name}")
-
-            # for sending to controller
+            # 连接model scheduler
+            if port_args.model_scheduler_ipc_name:
+                self.send_to_model_scheduler = context.socket(zmq.PUSH)
+                ipc_name = "scheduler_to_model_scheduler"
+                self.ipc_files.add(f"ipc://{ipc_name}")
+                self.send_to_model_scheduler.connect(f"ipc://{ipc_name}")
+            else:
+                self.send_to_model_scheduler = SimpleNamespace(send_pyobj=lambda x: None)
+            # 连接global controller
             if port_args.controller_ipc_name:
                 self.send_to_controller = context.socket(zmq.PUSH)
-                self.send_to_controller.connect(
-                    f"ipc://{port_args.controller_ipc_name}"
-                )
+                self.send_to_controller.connect(f"ipc://{port_args.controller_ipc_name}")
             else:
                 self.send_to_controller = SimpleNamespace(send_pyobj=lambda x: None)
         else:
             self.recv_from_request_handler = None
+            self.recv_from_gpu_scheduler = None
+            self.recv_from_model_scheduler = None
             self.redis_client = None
             self.send_to_detokenizer = SimpleNamespace(send_pyobj=lambda x: None)
+            self.send_to_model_scheduler = SimpleNamespace(send_pyobj=lambda x: None)
             self.send_to_controller = SimpleNamespace(send_pyobj=lambda x: None)
-
-        # Register cleanup function
+        # 终止自动清理
         atexit.register(self.cleanup)
         signal.signal(signal.SIGTERM, self._signal_handler)
         signal.signal(signal.SIGINT, self._signal_handler)
@@ -196,14 +203,13 @@ class Scheduler:
         if not self.enable_worker_pool:
             self._init_tokenizer(server_args.model_name, server_args.model_path)
         self.is_generation = True
-        # Launch a tensor parallel worker
+        # 启动TP worker
         if self.enable_overlap:
             TpWorkerClass = TpModelWorkerClient
         elif self.enable_worker_pool:
             TpWorkerClass = WorkerPoolTPWorker
         else:
             TpWorkerClass = SingleModelTPWorker
-
         self.tp_worker = TpWorkerClass(
             server_args=server_args,
             gpu_id=gpu_id,
@@ -216,9 +222,7 @@ class Scheduler:
             input_queue=input_queue,
             output_queue=output_queue,
         )
-
-        if not self.enable_worker_pool:
-            # Get token and memory info from the model worker
+        if not self.enable_worker_pool: # 获取运行限制
             (
                 self.max_total_num_tokens,
                 self.max_prefill_tokens,
@@ -232,24 +236,19 @@ class Scheduler:
         self.tp_cpu_group = self.tp_worker.get_tp_cpu_group()
         self.pad_input_ids_func = None
         set_random_seed(server_args.random_seed)
-
+        
+        # 初始化cache内存池
         self.first_time_activate = True
-
         if self.server_args.on and not self.enable_worker_pool:
-            # Init memory pool and cache
-            self.req_to_token_pool, self.token_to_kv_pool = (
-                self.tp_worker.get_memory_pool()
-            )
-
-            if (
-                server_args.chunked_prefill_size is not None
-                and server_args.disable_radix_cache
-            ):
+            self.req_to_token_pool, self.token_to_kv_pool = (self.tp_worker.get_memory_pool())
+            if (server_args.chunked_prefill_size is not None and server_args.disable_radix_cache):
+                logger.info(f"Scheduler: use chunk cache")
                 self.tree_cache = ChunkCache(
                     req_to_token_pool=self.req_to_token_pool,
                     token_to_kv_pool=self.token_to_kv_pool,
                 )
             else:
+                logger.info(f"Scheduler: use radix cache")
                 self.tree_cache = RadixCache(
                     req_to_token_pool=self.req_to_token_pool,
                     token_to_kv_pool=self.token_to_kv_pool,
@@ -263,10 +262,11 @@ class Scheduler:
                 f"max_total_num_tokens={self.max_total_num_tokens}, "
                 f"max_prefill_tokens={self.max_prefill_tokens}, "
                 f"max_running_requests={self.max_running_requests}, "
-                # f"context_len={self.model_config.context_len}"
+                f"context_len={self.model_config.context_len}"
             )
-
-        # Init running status
+            
+        # 运行状态
+        self.batch_is_full = False
         self.waiting_queue: List[Req] = []
         self.running_batch: Optional[ScheduleBatch] = None
         self.cur_batch: Optional[ScheduleBatch] = None
@@ -274,24 +274,19 @@ class Scheduler:
         self.stream_interval = server_args.stream_interval
         self.num_generated_tokens = 0
         self.last_stats_tic = time.time()
-
-        # Init chunked prefill
+        self.total_input_len = 0
+        self.num_received_requests = 0
+        # chunked prefill设置
         self.chunked_prefill_size = server_args.chunked_prefill_size
-        self.current_inflight_req = None
-        self.is_mixed_chunk = (
-            self.chunked_prefill_size is not None and server_args.enable_mixed_chunk
-        )
-
+        self.current_inflight_req: List[Req] = []
+        self.is_mixed_chunk = self.chunked_prefill_size is not None and server_args.enable_mixed_chunk
+        # 初始化约束解码状态缓存
         if not self.enable_worker_pool:
-            # Init the FSM cache for constrained generation
             self._init_fsm_cache(server_args.tokenizer_path)
-
         self.jump_forward_cache = JumpForwardCache()
 
-        # Init new token estimation
-        assert (
-            server_args.schedule_conservativeness >= 0
-        ), "Invalid schedule_conservativeness"
+        # token长度估计
+        assert (server_args.schedule_conservativeness >= 0), "Invalid schedule_conservativeness"
         self.min_new_token_ratio = min(
             global_config.base_min_new_token_ratio
             * server_args.schedule_conservativeness,
@@ -299,13 +294,8 @@ class Scheduler:
         )
         self.new_token_ratio = self.min_new_token_ratio
         self.new_token_ratio_decay = global_config.new_token_ratio_decay
-        self.batch_is_full = False
 
-        # profile requests
-        self.total_input_len = 0
-        self.num_received_requests = 0
-
-        # Init profiler
+        # Profiler
         if os.getenv("SGLANG_TORCH_PROFILER_DIR", "") == "":
             self.profiler = None
         else:
@@ -322,29 +312,29 @@ class Scheduler:
                 with_stack=True,
             )
 
+        # 模型启动相关
         if self.server_args.on and not self.enable_worker_pool:
-            self._activated = True
+            self._activated = True # 模型初始状态
         else:
             self._activated = False
             self.tp_worker.deactivate_model_runner()
+        self.waiting_queue_stash = [] # 重启模型等待队列
 
-        # Temporary for deactivate and activate requests
-        self.waiting_queue_stash = []
-
-        # XXX, MMY: token throughput tracking
+        # 吞吐量统计
         self.token_count = 0
         self.prefill_token_count = 0
         self.decode_token_count = 0
         self.last_tput_update_time = time.time()
-        self.model_name = server_args.model_name
-        self.instance_idx = getattr(server_args, "instance_idx", 0)
-
-        self.tput_update_thread = threading.Thread(
-            target=self._send_token_tput_updates, daemon=True
-        )
+        self.tput_update_thread = threading.Thread(target=self._send_token_tput_updates, daemon=True)
         self.tput_update_thread.start()
+        
+        # 服务质量统计
+        self.variable_chunk = False
+        self.ttft_slo_attainment = []
+        self.tpot_slo_attainment = []
 
     def _init_fsm_cache(self, tokenizer_path):
+        """约束解码状态机"""
         if not self.server_args.skip_tokenizer_init:
             self.regex_fsm_cache = FSMCache(
                 tokenizer_path,
@@ -357,6 +347,7 @@ class Scheduler:
             )
 
     def _init_tokenizer(self, model_name, model_path):
+        """加载tokenizer"""
         tokenizer_path = model_path
         self.model_config = ModelConfig(
             model_name,
@@ -365,7 +356,6 @@ class Scheduler:
             context_length=self.server_args.context_length,
             model_override_args=json.loads(self.server_args.json_model_override_args),
         )
-
         if self.server_args.skip_tokenizer_init:
             self.tokenizer = self.processor = None
         else:
@@ -377,33 +367,24 @@ class Scheduler:
                 )
                 self.tokenizer = self.processor.tokenizer
                 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
             else:
                 self.tokenizer = get_tokenizer(
                     tokenizer_path,
                     tokenizer_mode=self.server_args.tokenizer_mode,
                     trust_remote_code=self.server_args.trust_remote_code,
                 )
-        self.context_len = self.server_args.context_length or get_context_length(
-            self.model_config.hf_config
-        )
+        self.context_len = self.server_args.context_length or get_context_length(self.model_config.hf_config)
 
-    # XXX, MMY: send token throughput updates to the detokenizer
     def _send_token_tput_updates(self):
-        """Periodically send token throughput updates to the detokenizer."""
+        """周期性向detokenizer发送吞吐量更新"""
         while True:
             try:
                 time.sleep(1.0)
-
                 current_time = time.time()
                 elapsed_time = current_time - self.last_tput_update_time
-
                 if elapsed_time > 0 and self._activated:
-
-                    # throughput
-                    token_tput = (
-                        self.token_count / elapsed_time if self.token_count > 0 else 0.0
-                    )
+                    # 吞吐量计算
+                    token_tput = (self.token_count / elapsed_time if self.token_count > 0 else 0.0)
                     prefill_token_tput = (
                         self.prefill_token_count / elapsed_time
                         if self.prefill_token_count > 0
@@ -415,7 +396,7 @@ class Scheduler:
                         else 0.0
                     )
 
-                    # request and sending
+                    # 发送吞吐量更新
                     update = UpdateModelTput(
                         model_name=self.model_name,
                         instance_idx=self.instance_idx,
@@ -428,86 +409,28 @@ class Scheduler:
                     )
                     self.send_to_detokenizer.send_pyobj(update)
 
-                    # reset
+                    # 重置统计数据
                     self.token_count = 0
                     self.prefill_token_count = 0
                     self.decode_token_count = 0
                     self.last_tput_update_time = current_time
-
             except Exception as e:
                 logger.error(f"Error in token throughput update thread: {e}")
-
-    @torch.inference_mode()
-    def event_loop_normal(self):
-        """A normal blocking scheduler loop."""
-        self.last_batch = None
-
-        while True:
-            recv_other_requests = self.recv_other_requests()
-            recv_gpu_scheduler_requests = self.recv_gpu_scheduler_requests()
-            if len(recv_gpu_scheduler_requests) > 0:
-                logger.info(
-                    f"Scheduler: Received {len(recv_gpu_scheduler_requests)} requests from gpu scheduler"
-                )
-            non_gen_reqs = recv_other_requests + recv_gpu_scheduler_requests
-            deactivate_req = self.process_input_other_requests(non_gen_reqs)
-            if deactivate_req:
-                self.handle_deactivate_request(deactivate_req)
-
-            if self._activated:
-                recv_generation_requests = self.recv_generation_requests()
-                if len(recv_generation_requests) > 0:
-                    logger.info(
-                        f"Received {len(recv_generation_requests)} generation requests"
-                    )
-                self.process_input_gen_requests(recv_generation_requests)
-
-                batch = self.get_next_batch_to_run()
-
-                if batch:
-                    result = self.run_batch(batch)
-                    self.process_batch_result(batch, result)
-
-                    # Decode multiple steps to reduce the overhead
-                    if batch.forward_mode.is_decode():
-                        for _ in range(
-                            self.server_args.num_continuous_decode_steps - 1
-                        ):
-                            if not self.running_batch:
-                                break
-                            self.update_running_batch()
-                            if not self.running_batch:
-                                break
-                            result = self.run_batch(batch)
-                            self.process_batch_result(batch, result)
-                else:
-                    self.batch_is_full = False
-                    time.sleep(0.001)
-                    self.check_memory()
-                    self.new_token_ratio = global_config.init_new_token_ratio
-
-                self.last_batch = batch
-            else:
-                time.sleep(0.001)
 
     @torch.inference_mode()
     def event_loop_overlap(self):
         """A scheduler loop that overlaps the CPU processing and GPU computation."""
         result_queue = deque()
-
         self.last_batch = None
         self.running_batch = None
-
         while True:
             recv_other_requests = self.recv_other_requests()
             recv_gpu_scheduler_requests = self.recv_gpu_scheduler_requests()
             non_gen_reqs = recv_other_requests + recv_gpu_scheduler_requests
             deactivate_req = self.process_input_other_requests(non_gen_reqs)
-
             if self._activated:
                 recv_generation_requests = self.recv_generation_requests()
                 self.process_input_gen_requests(recv_generation_requests)
-
                 batch = self.get_next_batch_to_run()
                 self.cur_batch = batch
                 if batch:
@@ -515,7 +438,6 @@ class Scheduler:
                     result_queue.append((batch.copy(), result))
                 else:
                     self.batch_is_full = False
-
                 if self.last_batch:
                     tmp_batch, tmp_result = result_queue.popleft()
                     self.process_batch_result(tmp_batch, tmp_result)
@@ -523,7 +445,6 @@ class Scheduler:
                     time.sleep(0.001)
                     self.check_memory()
                     self.new_token_ratio = global_config.init_new_token_ratio
-
                 self.last_batch = batch
                 if deactivate_req:
                     self.handle_deactivate_request(deactivate_req, result_queue)
@@ -531,12 +452,49 @@ class Scheduler:
                 time.sleep(0.001)
 
     @torch.inference_mode()
+    def event_loop_normal(self):
+        """调度器主循环"""
+        self.last_batch = None
+        while True:
+            recv_other_requests = self.recv_other_requests()
+            recv_model_scheduler_requests = self.recv_model_scheduler_requests()
+            recv_gpu_scheduler_requests = self.recv_gpu_scheduler_requests()
+            if len(recv_gpu_scheduler_requests) > 0:
+                logger.info(f"Scheduler: Received {len(recv_gpu_scheduler_requests)} requests from gpu scheduler")
+            non_gen_reqs = recv_other_requests + recv_model_scheduler_requests + recv_gpu_scheduler_requests
+            deactivate_req = self.process_input_other_requests(non_gen_reqs)
+            if deactivate_req: self.handle_deactivate_request(deactivate_req)
+            if self._activated:
+                recv_generation_requests = self.recv_generation_requests()
+                if len(recv_generation_requests) > 0: logger.info(f"Received {len(recv_generation_requests)} generation requests")
+                self.process_input_gen_requests(recv_generation_requests)
+                batch = self.get_next_batch_to_run()
+                if batch:
+                    result = self.run_batch(batch)
+                    self.process_batch_result(batch, result)
+                    # 多步decode
+                    if batch.forward_mode.is_decode():
+                        for _ in range(self.server_args.num_continuous_decode_steps - 1):
+                            if self.running_batch is None: break
+                            self.update_running_batch()
+                            if self.running_batch is None: break
+                            result = self.run_batch(batch)
+                            self.process_batch_result(batch, result)
+                else:
+                    self.batch_is_full = False
+                    time.sleep(0.001)
+                    self.check_memory()
+                    self.new_token_ratio = global_config.init_new_token_ratio
+                self.last_batch = batch
+                self.update_memory_usage()
+            else:
+                time.sleep(0.001)
+
+    @torch.inference_mode()
     def _run_to_completion_overlap(self, result_queue: deque):
         batch = self.get_next_batch_to_run()
         if batch is not None:
-            logger.info(
-                f"Number of requests to run to completion: {batch.batch_size()}"
-            )
+            logger.info(f"Number of requests to run to completion: {batch.batch_size()}")
         while batch or len(self.waiting_queue) > 0:
             if batch:
                 self.cur_batch = batch
@@ -559,9 +517,7 @@ class Scheduler:
     def _run_to_completion_normal(self):
         batch = self.get_next_batch_to_run()
         if batch is not None:
-            logger.info(
-                f"Number of requests to run to completion: {batch.batch_size()}"
-            )
+            logger.info(f"Number of requests to run to completion: {batch.batch_size()}")
         while batch or len(self.waiting_queue) > 0:
             if batch:
                 result = self.run_batch(batch)
@@ -570,11 +526,9 @@ class Scheduler:
                 # Decode multiple steps to reduce the overhead
                 if batch.forward_mode.is_decode():
                     for _ in range(self.server_args.num_continuous_decode_steps - 1):
-                        if not self.running_batch:
-                            break
+                        if self.running_batch is None: break
                         self.update_running_batch()
-                        if not self.running_batch:
-                            break
+                        if self.running_batch is None: break
                         result = self.run_batch(batch)
                         self.process_batch_result(batch, result)
             self.last_batch = batch
@@ -582,94 +536,93 @@ class Scheduler:
 
         self.last_batch = None
 
-    def recv_generation_requests(self):
-        recv_reqs = []
+    def recv_generation_requests(self) -> List[GenerateReqInput]:
+        """接收生成请求
+        激进计算剩余prefill空间，添加prefill请求
+        """
+        recv_reqs: List[GenerateReqInput] = []
         if self.tp_rank == 0:
-            rem_total_tokens = (
-                self.token_to_kv_pool.available_size()
-                + self.tree_cache.evictable_size()
-            )
-            rem_input_tokens = (
-                self.max_prefill_tokens
-                if self.max_prefill_tokens is not None
-                else 16384
-            )
-            rem_chunk_tokens = (
-                self.chunked_prefill_size
-                if self.chunked_prefill_size is not None
-                else 8192
-            )
-            approx_remain_prefill_tokens = min(
-                rem_total_tokens, rem_input_tokens, rem_chunk_tokens
-            )
-            max_prefill_count = (
-                int(approx_remain_prefill_tokens // self.avg_input_len) + 1
-            )
+            # 最大input长度，采用默认值32768
+            rem_input_tokens = self.max_prefill_tokens if self.max_prefill_tokens is not None else 32768
+            # chunked prefill块长度
+            # rem_chunk_tokens = self.chunked_prefill_size if self.chunked_prefill_size is not None else 8192
+            # 计算剩余prefill数
+            # approx_remain_prefill_tokens = min(self.rem_tokens, rem_input_tokens, rem_chunk_tokens)
+            approx_remain_prefill_tokens = min(self.rem_tokens, rem_input_tokens)
+            max_prefill_count = (int(approx_remain_prefill_tokens // self.avg_input_len) + 1)
             max_fetch_count = max_prefill_count - len(self.waiting_queue)
-            if max_fetch_count > 0:
+            if max_fetch_count > 0: # 最大接收数量导致waiting不一致
                 recv_reqs = self.redis_client.recv_pyobj_non_block(
                     key=f"{self.server_args.backend_generate_request_key_prefix}:{self.model_name}",
                     count=max_fetch_count,
                 )
-            # if max_fetch_count > 0:
-            #     recv_reqs = self.redis_client.recv_pyobj_non_block(
-            #         key=f"{self.server_args.backend_generate_request_key_prefix}:{self.model_name}",
-            #         count=max_fetch_count,
-            #     )
-                # logger.info(
-                #     f"Fetching maximum of {max_fetch_count} requests from redis. Fetched {len(recv_reqs)} requests"
-                # )
-
         else:
             recv_reqs = []
-
         if self.tp_size != 1:
             recv_reqs = broadcast_pyobj(recv_reqs, self.tp_rank, self.tp_cpu_group)
         return recv_reqs
 
-    def recv_gpu_scheduler_requests(self):
+    def recv_model_scheduler_requests(self) -> List[ResizeChunkInput]:
+        """接收model scheduler调度请求"""
+        if self.tp_rank == 0:
+            recv_reqs = []
+            while True:
+                try:
+                    recv_req: ResizeChunkInput = self.recv_from_model_scheduler.recv_pyobj(zmq.NOBLOCK)
+                except zmq.ZMQError:
+                    break
+                if recv_req.model_name == self.model_name:
+                    recv_reqs.append(recv_req)
+        else:
+            recv_reqs = []
+        if self.tp_size != 1:
+            recv_reqs = broadcast_pyobj(recv_reqs, self.tp_rank, self.tp_cpu_group)
+        return recv_reqs[-1:]
+    
+    def recv_gpu_scheduler_requests(self) -> List:
+        """接收GPU调度请求"""
         if self.tp_rank == 0:
             recv_reqs = []
             while True:
                 try:
                     recv_req = self.recv_from_gpu_scheduler.recv_pyobj(zmq.NOBLOCK)
-
                 except zmq.ZMQError:
                     break
                 recv_reqs.append(recv_req)
         else:
             recv_reqs = []
-
         if self.tp_size != 1:
             recv_reqs = broadcast_pyobj(recv_reqs, self.tp_rank, self.tp_cpu_group)
         return recv_reqs
-
-    def recv_other_requests(self):
+    
+    def recv_other_requests(self) -> List:
+        """接收其他类型请求"""
         if self.tp_rank == 0:
             recv_reqs = []
             while True:
                 try:
                     recv_req = self.recv_from_request_handler.recv_pyobj(zmq.NOBLOCK)
-                    logger.info(
-                        f"Scheduler: Received request from request handler: {recv_req}"
-                    )
+                    logger.info(f"Scheduler: Received request from request handler: {recv_req}")
                 except zmq.ZMQError:
                     break
                 recv_reqs.append(recv_req)
         else:
             recv_reqs = []
-
         if self.tp_size != 1:
             recv_reqs = broadcast_pyobj(recv_reqs, self.tp_rank, self.tp_cpu_group)
         return recv_reqs
 
-    def process_input_gen_requests(self, recv_reqs: List):
+    def process_input_gen_requests(self, recv_reqs: List[GenerateReqInput]):
+        """批量tokenize及请求处理"""
         for recv_req in recv_reqs:
             assert isinstance(recv_req, GenerateReqInput)
             tokenized_req = self._tokenize(recv_req)
             self.handle_generate_request(tokenized_req)
 
-    def process_input_other_requests(self, recv_reqs: List):
+    def process_input_other_requests(self, recv_reqs: List) -> Optional[DeactivateReqInput]:
+        """处理控制请求
+        停止时收到启动+停止时，返回停止请求
+        """
         recv_deactivate_reqs = []
         recv_activate_reqs = []
         for recv_req in recv_reqs:
@@ -679,9 +632,7 @@ class Scheduler:
                 self.abort_request(recv_req)
             elif isinstance(recv_req, UpdateWeightReqInput):
                 success, message = self.update_weights(recv_req)
-                self.send_to_detokenizer.send_pyobj(
-                    UpdateWeightReqOutput(success, message)
-                )
+                self.send_to_detokenizer.send_pyobj(UpdateWeightReqOutput(success, message))
             elif isinstance(recv_req, ProfileReq):
                 if recv_req == ProfileReq.START_PROFILE:
                     self.start_profile()
@@ -689,45 +640,39 @@ class Scheduler:
                     self.stop_profile()
             elif isinstance(recv_req, GetMemPoolSizeReq):
                 rid = recv_req.rid
-                self.send_to_detokenizer.send_pyobj(
-                    GetMemPoolSizeReqOutput(rid, self.max_total_num_tokens)
-                )
+                self.send_to_detokenizer.send_pyobj(GetMemPoolSizeReqOutput(rid, self.max_total_num_tokens))
             elif isinstance(recv_req, GetMemoryUsageReq):
                 rid = recv_req.rid
                 memory_usage = self.get_memory_usage()
-                self.send_to_detokenizer.send_pyobj(
-                    GetMemoryUsageReqOutput(rid, **memory_usage)
-                )
+                self.send_to_detokenizer.send_pyobj(GetMemoryUsageReqOutput(rid, self.model_name, memory_usage))
             elif isinstance(recv_req, ActivateReqInput):
                 recv_activate_reqs.append(recv_req)
             elif isinstance(recv_req, DeactivateReqInput):
                 recv_deactivate_reqs.append(recv_req)
             elif isinstance(recv_req, ResizeMemPoolReqInput):
                 self.resize_mem_pool(recv_req)
+            elif isinstance(recv_req, ResizeChunkInput):
+                logger.info(f"Received request: resize prefill chunk size to {recv_req.chunk_size}")
+                self.chunked_prefill_size = recv_req.chunk_size
             else:
                 logger.warning(f"Received invalid request: {recv_req}")
-        deactivate_req = self.process_activate_deactivate_requests(
-            recv_activate_reqs, recv_deactivate_reqs
-        )
+        deactivate_req = self.process_activate_deactivate_requests(recv_activate_reqs, recv_deactivate_reqs)
         return deactivate_req
 
     def process_activate_deactivate_requests(
-        self, recv_activate_reqs: List, recv_deactivate_reqs: List
-    ):
+        self,
+        recv_activate_reqs: List[ActivateReqInput],
+        recv_deactivate_reqs: List[DeactivateReqInput]
+    ) -> Optional[DeactivateReqInput]:
+        """模型启动/停止"""
         if len(recv_activate_reqs) > 1:
             logger.error(f"Received multiple activate requests: {recv_activate_reqs}")
         if len(recv_deactivate_reqs) > 1:
-            logger.error(
-                f"Received multiple deactivate requests: {recv_deactivate_reqs}"
-            )
-        # Handle no requests case
-        if not recv_activate_reqs and not recv_deactivate_reqs:
-            return None
-
+            logger.error(f"Received multiple deactivate requests: {recv_deactivate_reqs}")
+        if not recv_activate_reqs and not recv_deactivate_reqs: return None
         activate_req = recv_activate_reqs[0] if recv_activate_reqs else None
         deactivate_req = recv_deactivate_reqs[0] if recv_deactivate_reqs else None
-
-        # Handle single request case
+        # 单独启动或停止
         if not (activate_req and deactivate_req):
             if activate_req:
                 logger.info("Processing activate request")
@@ -736,35 +681,24 @@ class Scheduler:
                 logger.info("Processing deactivate request")
                 self.handle_deactivate_request(deactivate_req)
             return None
-
-        # Handle both activate and deactivate case
         logger.info("Processing both activate and deactivate requests")
-        if self._activated:
-            # When activated: deactivate first, then activate
+        if self._activated: # 已启动，先停止后重启
             logger.info("Currently activated - deactivating first")
             self.handle_deactivate_request(deactivate_req)
             self.handle_activate_request(activate_req)
             return None
-        else:
-            # When deactivated: activate first, then deactivate
+        else: # 未启动，启动，返回停止
             logger.info("Currently deactivated - activating first")
             self.handle_activate_request(activate_req)
             return deactivate_req
 
     def _tokenize(self, obj: GenerateReqInput):
         rid = obj.rid
-
-        if obj.input_ids is None:
-            input_text = obj.text
-            input_ids = self.tokenizer.encode(input_text)
-        else:
-            input_text = obj.text if obj.text is not None else None
-            input_ids = obj.input_ids
-
+        input_text = obj.text
+        input_ids = self.tokenizer.encode(input_text) if obj.input_ids is None else obj.input_ids
         self._validate_input_length(input_ids)
         sampling_params = self._get_sampling_params(obj.sampling_params)
         assert obj.image_data is None, "Image inputs are not supported."
-
         tokenized_obj = TokenizedGenerateReqInput(
             rid,
             input_text,
@@ -781,7 +715,7 @@ class Scheduler:
         )
         return tokenized_obj
 
-    def _get_sampling_params(self, sampling_params_data: dict):
+    def _get_sampling_params(self, sampling_params_data: dict) -> SamplingParams:
         sampling_params = SamplingParams(**sampling_params_data)
         if sampling_params.max_new_tokens != 0:
             sampling_params.normalize(self.tokenizer)
@@ -789,16 +723,15 @@ class Scheduler:
         return sampling_params
 
     def _validate_input_length(self, input_ids: List[int]):
+        """验证输入长度符合限制"""
         if len(input_ids) >= self.context_len:
             raise ValueError(
                 f"The input ({len(input_ids)} tokens) is longer than the "
                 f"model's context length ({self.context_len} tokens)."
             )
 
-    def handle_generate_request(
-        self,
-        recv_req: TokenizedGenerateReqInput,
-    ):
+    def handle_generate_request(self, recv_req: TokenizedGenerateReqInput):
+        """对输入初始化请求对象"""
         req = Req(
             recv_req.rid,
             recv_req.input_text,
@@ -809,42 +742,24 @@ class Scheduler:
             slo=recv_req.slo,
         )
         req.tokenizer = self.tokenizer
-
-        req.return_logprob = recv_req.return_logprob
-        req.top_logprobs_num = recv_req.top_logprobs_num
         req.stream = recv_req.stream
+        req.return_logprob = recv_req.return_logprob
         req.logprob_start_len = recv_req.logprob_start_len
-
-        if req.logprob_start_len == -1:
-            # By default, only return the logprobs for output tokens
-            req.logprob_start_len = len(recv_req.input_ids) - 1
-
-        # Init regex FSM
-        if (
-            req.sampling_params.json_schema is not None
-            or req.sampling_params.regex is not None
-        ):
+        req.top_logprobs_num = recv_req.top_logprobs_num
+        # 默认只对输出token计算logprob
+        if req.logprob_start_len == -1: req.logprob_start_len = len(recv_req.input_ids) - 1
+        # 初始化 regex FSM
+        if (req.sampling_params.json_schema is not None or req.sampling_params.regex is not None):
             if req.sampling_params.json_schema is not None:
-                req.regex_fsm, computed_regex_string = self.regex_fsm_cache.query(
-                    ("json", req.sampling_params.json_schema)
-                )
+                req.regex_fsm, computed_regex_string = self.regex_fsm_cache.query(("json", req.sampling_params.json_schema))
             elif req.sampling_params.regex is not None:
-                req.regex_fsm, computed_regex_string = self.regex_fsm_cache.query(
-                    ("regex", req.sampling_params.regex)
-                )
+                req.regex_fsm, computed_regex_string = self.regex_fsm_cache.query(("regex", req.sampling_params.regex))
             if not self.disable_regex_jump_forward:
-                req.jump_forward_map = self.jump_forward_cache.query(
-                    computed_regex_string
-                )
-
-        # Truncate prompts that are too long
+                req.jump_forward_map = self.jump_forward_cache.query(computed_regex_string)
+        # 截断过长输入
         if len(req.origin_input_ids) > self.max_req_input_len:
-            logger.warning(
-                "Request length is longer than the KV cache pool size or "
-                "the max context length. Truncated!!!"
-            )
-            req.origin_input_ids = req.origin_input_ids[: self.max_req_input_len]
-
+            logger.warning("Request length is longer than the KV cache pool size or the max context length. Truncated!!!")
+            req.origin_input_ids = req.origin_input_ids[:self.max_req_input_len]
         req.sampling_params.max_new_tokens = min(
             (
                 req.sampling_params.max_new_tokens
@@ -853,15 +768,13 @@ class Scheduler:
             ),
             self.max_req_len - len(req.origin_input_ids) - 1,
         )
-
+        # 加入等待队列
         self.waiting_queue.append(req)
         self.num_received_requests += 1
         self.total_input_len += len(req.origin_input_ids)
 
     def print_decode_stats(self):
-        num_used = self.max_total_num_tokens - (
-            self.token_to_kv_pool.available_size() + self.tree_cache.evictable_size()
-        )
+        used_tokens = self.max_total_num_tokens - self.rem_tokens
         throughput = self.num_generated_tokens / (time.time() - self.last_stats_tic)
         self.num_generated_tokens = 0
         self.last_stats_tic = time.time()
@@ -869,8 +782,8 @@ class Scheduler:
         logger.info(
             f"Decode batch. "
             f"#running-req: {num_running_reqs}, "
-            f"#token: {num_used}, "
-            f"token usage: {num_used / self.max_total_num_tokens:.2f}, "
+            f"#token: {used_tokens}, "
+            f"token usage: {used_tokens / self.max_total_num_tokens:.2f}, "
             f"gen throughput (token/s): {throughput:.2f}, "
             f"#queue-req: {len(self.waiting_queue)}"
         )
@@ -878,7 +791,6 @@ class Scheduler:
     def check_memory(self):
         # the checks does not make sense for the elastic case
         # comment out for now
-        return
         # available_size = (
         #     self.token_to_kv_pool.available_size() + self.tree_cache.evictable_size()
         # )
@@ -889,7 +801,6 @@ class Scheduler:
         #         "KV cache pool leak detected!"
         #     )
         #     exit(1) if crash_on_warning else None
-
         # if len(self.req_to_token_pool.free_slots) != self.req_to_token_pool.size:
         #     warnings.warn(
         #         "Warning: "
@@ -898,29 +809,27 @@ class Scheduler:
         #         "Memory pool leak detected!"
         #     )
         #     exit(1) if crash_on_warning else None
+        return
 
-    def get_next_batch_to_run(self):
-        # Merge the prefill batch into the running batch
-        if (
-            self.last_batch
-            and not self.last_batch.forward_mode.is_decode()
-            and not self.last_batch.is_empty()
-        ):
+    def get_next_batch_to_run(self) -> ScheduleBatch:
+        """获取下一运行batch
+        Returns:
+            ScheduleBatch: 下一运行批次
+        """
+        # 1. Inflight req：从last batch分离inflight batch，剩余running batch合并运行
+        if self.last_batch and not self.last_batch.forward_mode.is_decode() and not self.last_batch.is_empty():
             if self.current_inflight_req:
-                self.last_batch.filter_batch(
-                    current_inflight_req=self.current_inflight_req
-                )
-                self.tree_cache.cache_unfinished_req(self.current_inflight_req)
-                # Inflight request keeps its rid but will get a new req_pool_idx.
-                self.req_to_token_pool.free(self.current_inflight_req.req_pool_idx)
+                self.last_batch.filter_batch(current_inflight_req=self.current_inflight_req)
+                for req in self.current_inflight_req:
+                    self.tree_cache.cache_unfinished_req(req)
+                    self.req_to_token_pool.free(req.req_pool_idx)
                 self.batch_is_full = False
             if not self.last_batch.is_empty():
                 if self.running_batch is None:
                     self.running_batch = self.last_batch
                 else:
                     self.running_batch.merge_batch(self.last_batch)
-
-        # Prefill first
+        # 2. Prefill req：内存充足，有请求等待时优先添加prefill，mix则将新batch与running batch合并运行
         new_batch = self.get_new_batch_prefill()
         if new_batch is not None:
             self.send_to_controller.send_pyobj(
@@ -932,91 +841,59 @@ class Scheduler:
                 )
             )
             return new_batch
-
-        # Check memory
-        if self.running_batch is None:
-            return
-
-        # Run decode
+        # 3. Decode req：自回归运行decoding请求
+        if self.running_batch is None: return
         before_bs = self.running_batch.batch_size()
         self.update_running_batch()
-        if not self.running_batch:
-            self.batch_is_full = False
-            return None
-        if before_bs != self.running_batch.batch_size():
-            self.batch_is_full = False
+        if self.running_batch is None or before_bs != self.running_batch.batch_size(): self.batch_is_full = False
         return self.running_batch
 
-    def _should_abort_req(self, req):
+    def _should_abort_req(self, req: Req) -> bool:
         if req.slo is not None and time.time() + 0.5 - req.arrival_time > req.slo:
             return True
         return False
 
     def get_new_batch_prefill(self) -> Optional[ScheduleBatch]:
-        # Handle the cases where prefill is not allowed
-        if (
-            self.batch_is_full or len(self.waiting_queue) == 0
-        ) and self.current_inflight_req is None:
+        # 无等待prefill请求
+        if (self.batch_is_full or len(self.waiting_queue) == 0) and not self.current_inflight_req:
             return None
-
-        running_bs = len(self.running_batch.reqs) if self.running_batch else 0
+        # 运行请求数超限则停止添加
+        running_bs = len(self.running_batch.reqs) if self.running_batch is not None else 0
         if running_bs >= self.max_running_requests:
             self.batch_is_full = True
             return None
-
+        # 内存优先保障decode
         if self.running_batch is not None:
-            current_available_size = (
-                self.token_to_kv_pool.available_size()
-                + self.tree_cache.evictable_size()
-            )
-            reserved_for_decode = (
-                global_config.retract_decode_steps * self.running_batch.batch_size()
-            )
-            # prefer to run decode if there is me
-            if current_available_size < reserved_for_decode:
-                return None
-        # Get priority queue
+            reserved_for_decode = global_config.retract_decode_steps * self.running_batch.batch_size()
+            if self.rem_tokens < reserved_for_decode: return None
+        # 根据调度策略排序等待队列
         prefix_computed = self.policy.calc_priority(self.waiting_queue)
-
-        # Prefill policy
+        # Prefill添加策略
         num_mixed_running = running_bs if self.is_mixed_chunk else 0
         adder = PrefillAdder(
             self.tree_cache,
             self.running_batch,
             self.new_token_ratio,
-            self.token_to_kv_pool.available_size() + self.tree_cache.evictable_size(),
+            self.rem_tokens,
             self.max_prefill_tokens,
             self.chunked_prefill_size,
             num_mixed_running,
             self.enable_elastic_memory,
         )
-
-        has_inflight = self.current_inflight_req is not None
-        if has_inflight:
-            self.current_inflight_req.init_next_round_input(
-                None if prefix_computed else self.tree_cache
-            )
-            self.current_inflight_req = adder.add_inflight_req(
-                self.current_inflight_req
-            )
-
-        if self.lora_paths:
-            lora_set = (
-                set([req.lora_path for req in self.running_batch.reqs])
-                if self.running_batch is not None
-                else set([])
-            )
-
-        # Get requests from the waiting queue to a new prefill batch
+        # 更新chunk缓存
+        for req in self.current_inflight_req: req.init_next_round_input(None if prefix_computed else self.tree_cache)
+        self.current_inflight_req = adder.add_inflight_req(self.current_inflight_req)
+        if self.lora_paths is not None:
+            lora_set = set([req.lora_path for req in self.running_batch.reqs]) if self.running_batch is not None else set([])
+        # 从等待队列添加请求至prefill batch
         abort_reqs = []
         for req in self.waiting_queue:
-            # abort request if it exceeds the SLO
+            # 抛弃策略：超过SLO则拒绝服务
             if self.server_args.abort_exceed_slos and self._should_abort_req(req):
                 abort_reqs.append(req)
                 continue
-
             if (
-                self.lora_paths
+                self.lora_paths is not None
                 and len(
                     lora_set
                     | set([req.lora_path for req in adder.can_run_list])
@@ -1026,55 +903,37 @@ class Scheduler:
             ):
                 self.batch_is_full = True
                 break
-
-            if running_bs + len(adder.can_run_list) >= self.max_running_requests:
+            if running_bs + len(adder.can_run_list) >= self.max_running_requests: # 运行请求数超限则停止添加
                 self.batch_is_full = True
                 break
-
+            # 添加至prefill batch
             req.init_next_round_input(None if prefix_computed else self.tree_cache)
             res = adder.add_one_req(req)
             if res != AddReqResult.CONTINUE:
                 if res == AddReqResult.NO_TOKEN:
                     self.batch_is_full = True
                 break
-
-        # Remove requests that is aborted
+        # 移除遗弃请求
         if self.server_args.abort_exceed_slos:
             self.abort_exceed_slo_reqs(abort_reqs)
-
-        # Update waiting queue
+        # 更新等待队列
         can_run_list = adder.can_run_list
-        if len(can_run_list) == 0:
-            return None
-        self.waiting_queue = [
-            x for x in self.waiting_queue if x not in set(can_run_list)
-        ]
-
-        if adder.new_inflight_req is not None:
-            assert self.current_inflight_req is None
-            self.current_inflight_req = adder.new_inflight_req
-
-        if self.current_inflight_req:
-            self.current_inflight_req.is_inflight_req += 1
-
-        # Print stats
+        if len(can_run_list) == 0: return None
+        self.waiting_queue = [x for x in self.waiting_queue if x not in set(can_run_list)]
+        for req in can_run_list: req.set_out_queue_time()
+        # 对新增请求添加chunked prefill
+        self.current_inflight_req.extend(adder.new_inflight_req)
+        for req in self.current_inflight_req:
+            req.is_inflight_req += 1
+        # 打印统计数据
         if self.tp_rank == 0:
             if isinstance(self.tree_cache, RadixCache):
-                self.tree_cache_metrics["total"] += (
-                    adder.log_input_tokens + adder.log_hit_tokens
-                ) / 10**9
+                self.tree_cache_metrics["total"] += (adder.log_input_tokens + adder.log_hit_tokens) / 10**9
                 self.tree_cache_metrics["hit"] += (adder.log_hit_tokens) / 10**9
-                tree_cache_hit_rate = (
-                    self.tree_cache_metrics["hit"] / self.tree_cache_metrics["total"]
-                )
+                tree_cache_hit_rate = (self.tree_cache_metrics["hit"] / self.tree_cache_metrics["total"])
             else:
                 tree_cache_hit_rate = 0.0
-
-            num_used = self.max_total_num_tokens - (
-                self.token_to_kv_pool.available_size()
-                + self.tree_cache.evictable_size()
-            )
-
+            used_tokens = self.max_total_num_tokens - self.rem_tokens
             if num_mixed_running > 0:
                 logger.info(
                     f"Prefill batch"
@@ -1083,8 +942,9 @@ class Scheduler:
                     f"#new-token: {adder.log_input_tokens}, "
                     f"#cached-token: {adder.log_hit_tokens}, "
                     f"cache hit rate: {100.0 * tree_cache_hit_rate:.2f}%, "
-                    f"token usage: {num_used / self.max_total_num_tokens:.2f}, "
-                    f"#queue-req: {len(self.waiting_queue) + has_inflight}"
+                    f"token usage: {used_tokens / self.max_total_num_tokens:.2f}, "
+                    f"#queue-req: {len(self.waiting_queue)}, "
+                    f"#inflight-req: {len(self.current_inflight_req)}"
                 )
             else:
                 logger.info(
@@ -1093,16 +953,12 @@ class Scheduler:
                     f"#new-token: {adder.log_input_tokens}, "
                     f"#cached-token: {adder.log_hit_tokens}, "
                     f"cache hit rate: {100.0 * tree_cache_hit_rate:.2f}%, "
-                    f"token usage: {num_used / self.max_total_num_tokens:.2f}, "
+                    f"token usage: {used_tokens / self.max_total_num_tokens:.2f}, "
                     f"#running-req: {running_bs}, "
-                    f"#queue-req: {len(self.waiting_queue) + has_inflight}"
+                    f"#queue-req: {len(self.waiting_queue)}, "
+                    f"#inflight-req: {len(self.current_inflight_req)}"
                 )
-
-        for req in can_run_list:
-            req.set_out_queue_time()
-            assert req.out_queue_timestamp is not None
-
-        # Create a new batch
+        # 初始化batch
         new_batch = ScheduleBatch.init_new(
             can_run_list,
             self.req_to_token_pool,
@@ -1111,36 +967,36 @@ class Scheduler:
             self.model_config,
         )
         new_batch.prepare_for_extend()
-
-        # Mixed-style chunked prefill
+        # Mixed chunked prefill：合并运行新batch与decoding batch
         if self.is_mixed_chunk and self.running_batch is not None:
-            self.running_batch.prepare_for_decode(self.enable_overlap)
-            new_batch.mix_with_running(self.running_batch)
-            new_batch.decoding_reqs = self.running_batch.reqs
+            # self.running_batch.prepare_for_decode(self.enable_overlap)
+            self.update_running_batch()
+            if self.running_batch is not None:
+                new_batch.mix_with_running(self.running_batch)
+                new_batch.decoding_reqs = self.running_batch.reqs
             self.running_batch = None
         else:
             new_batch.decoding_reqs = None
-
+        new_batch.decoding_reqs = None
         return new_batch
 
     def update_running_batch(self):
-        """Update the current running decoding batch."""
+        """更新decoding batch信息
+        过滤已完成请求
+        检查剩余显存
+        更新显存映射
+        """
         global test_retract
-        batch = self.running_batch
-
-        batch.filter_batch()
-        if batch.is_empty():
+        self.running_batch.filter_batch() # 过滤已完成请求
+        if self.running_batch.is_empty():
             self.running_batch = None
             return
-
-        # Check if decode out of memory
-        if not batch.check_decode_mem() or (test_retract and batch.batch_size() > 10):
+        # 检查显存剩余
+        if not self.running_batch.check_decode_mem() or (test_retract and self.running_batch.batch_size() > 10):
             old_ratio = self.new_token_ratio
-
-            retracted_reqs, new_token_ratio = batch.retract_decode()
-            if new_token_ratio == 0.0:
-                new_token_ratio = old_ratio
-            # send to controller
+            retracted_reqs, new_token_ratio = self.running_batch.retract_decode() # 撤回请求以释放空间
+            if new_token_ratio == 0.0: new_token_ratio = old_ratio
+            # 撤回情况发送至controller
             self.send_to_controller.send_pyobj(
                 BatchRetractDecodeReq(
                     rids=[req.rid for req in retracted_reqs],
@@ -1150,7 +1006,6 @@ class Scheduler:
                 )
             )
             self.new_token_ratio = new_token_ratio
-
             logger.info(
                 "Decode out of memory happened. "
                 f"#retracted_reqs: {len(retracted_reqs)}, "
@@ -1158,41 +1013,29 @@ class Scheduler:
             )
             self.waiting_queue.extend(retracted_reqs)
         else:
-            self.new_token_ratio = max(
-                self.new_token_ratio - self.new_token_ratio_decay,
-                self.min_new_token_ratio,
-            )
-
-        # Check for jump-forward
+            self.new_token_ratio = max(self.new_token_ratio - self.new_token_ratio_decay, self.min_new_token_ratio)
+        # 检查jump-forward
         if not self.disable_regex_jump_forward:
-            jump_forward_reqs = batch.check_for_jump_forward(self.pad_input_ids_func)
+            jump_forward_reqs = self.running_batch.check_for_jump_forward(self.pad_input_ids_func)
             self.waiting_queue.extend(jump_forward_reqs)
-            if batch.is_empty():
+            if self.running_batch.is_empty():
                 self.running_batch = None
                 return
-
-        # Update batch tensors
-        batch.prepare_for_decode(self.enable_overlap)
+        # 更新显存映射张量
+        self.running_batch.prepare_for_decode(self.enable_overlap)
 
     def run_batch(self, batch: ScheduleBatch):
-        """Run a batch."""
-        if self.is_generation:
+        """运行batch"""
+        if self.is_generation: # 生成模型
             if batch.forward_mode.is_decode() or batch.extend_num_tokens != 0:
                 model_worker_batch = batch.get_model_worker_batch()
-                logits_output, next_token_ids = self.tp_worker.forward_batch_generation(
-                    model_worker_batch
-                )
+                logits_output, next_token_ids = self.tp_worker.forward_batch_generation(model_worker_batch)
             else:
                 logits_output = None
-                if self.tokenizer is not None:
-                    next_token_ids = torch.full(
-                        (batch.batch_size(),), self.tokenizer.eos_token_id
-                    )
-                else:
-                    next_token_ids = torch.full((batch.batch_size(),), 0)
+                next_token_ids = torch.full((batch.batch_size(),), self.tokenizer.eos_token_id if self.tokenizer is not None else 0)
             batch.output_ids = next_token_ids
             ret = logits_output, next_token_ids, model_worker_batch.bid
-        else:  # embedding or reward model
+        else: # embedding/reward模型
             assert batch.extend_num_tokens != 0
             model_worker_batch = batch.get_model_worker_batch()
             embeddings = self.tp_worker.forward_batch_embedding(model_worker_batch)
@@ -1206,71 +1049,74 @@ class Scheduler:
                 self.running_batch = None
         else:
             self.process_batch_result_prefill(batch, result)
+        # 更新请求信息
+        prefill_timestamps: Dict[str, float] = {}
+        finish_timestamps: Dict[str, Tuple[float, int, float]] = {}
+        for req in batch.reqs:
+            if req.finish_timestamp is not None:
+                finish_timestamps[req.rid] = (req.prefill_finish_timestamp, len(req.output_ids), req.finish_timestamp)
+            elif req.prefill_finish_timestamp is not None:
+                prefill_timestamps[req.rid] = req.prefill_finish_timestamp
+        message = UpdateQueueStats(
+            model_name=self.model_name,
+            prefill_timestamps=prefill_timestamps,
+            finish_timestamps=finish_timestamps,
+            inflight_reqs=len(self.current_inflight_req),
+            running_reqs=len(self.running_batch.reqs) if self.running_batch is not None else 0,
+            chunk_size=self.chunked_prefill_size
+        )
+        self.send_to_model_scheduler.send_pyobj(message)
+                
 
     def process_batch_result_prefill(self, batch: ScheduleBatch, result):
         if self.is_generation:
             logits_output, next_token_ids, bid = result
-
             if self.enable_overlap:
                 logits_output, next_token_ids = self.tp_worker.resulve_batch_result(bid)
             else:
                 # Move next_token_ids and logprobs to cpu
-                if batch.return_logprob:
+                if batch.return_logprob: # False
                     logits_output.next_token_logprobs = (
                         logits_output.next_token_logprobs[
-                            torch.arange(
-                                len(next_token_ids),
-                                device=f"{self.device}:{self.gpu_id}",
-                            ),
+                            torch.arange(len(next_token_ids), device=f"{self.device}:{self.gpu_id}",),
                             next_token_ids,
                         ].tolist()
                     )
-                    logits_output.input_token_logprobs = (
-                        logits_output.input_token_logprobs.tolist()
-                    )
-                    logits_output.normalized_prompt_logprobs = (
-                        logits_output.normalized_prompt_logprobs.tolist()
-                    )
+                    logits_output.input_token_logprobs = (logits_output.input_token_logprobs.tolist())
+                    logits_output.normalized_prompt_logprobs = (logits_output.normalized_prompt_logprobs.tolist())
                 next_token_ids = next_token_ids.tolist()
 
             # Check finish conditions
             logprob_pt = 0
             for i, req in enumerate(batch.reqs):
-                req.set_prefill_finish_time()
+                # req.set_prefill_finish_time()
                 if req.is_inflight_req > 0:
                     req.is_inflight_req -= 1
                 else:
                     # Inflight reqs' prefill is not finished
+                    if req.prefill_finish_timestamp is None: req.set_prefill_finish_time()
                     req.completion_tokens_wo_jump_forward += 1
                     req.output_ids.append(next_token_ids[i])
                     req.check_finished()
-
                     if req.finished():
                         self.tree_cache.cache_finished_req(req)
+                        req.set_finish_time()
                     elif not batch.decoding_reqs or req not in batch.decoding_reqs:
                         self.tree_cache.cache_unfinished_req(req)
-
                     if req.regex_fsm is not None:
-                        req.regex_fsm_state = req.regex_fsm.get_next_state(
-                            req.regex_fsm_state, next_token_ids[i]
-                        )
-
+                        req.regex_fsm_state = req.regex_fsm.get_next_state(req.regex_fsm_state, next_token_ids[i])
                     if req.return_logprob:
-                        logprob_pt += self.add_logprob_return_values(
-                            i, req, logprob_pt, next_token_ids, logits_output
-                        )
+                        logprob_pt += self.add_logprob_return_values(i, req, logprob_pt, next_token_ids, logits_output)
 
             # XXX, MMY: Update prefill token count (to be checked if it is correct)
             prefill_tokens = 0
             for req in batch.reqs:
                 prefill_tokens += req.extend_input_len
-
             self.prefill_token_count += prefill_tokens
             self.token_count += prefill_tokens
         else:  # embedding or reward model
             embeddings, bid = result
             embeddings = embeddings.tolist()
-
             # Check finish conditions
             for i, req in enumerate(batch.reqs):
                 req.embedding = embeddings[i]
@@ -1287,7 +1133,6 @@ class Scheduler:
                     req.set_finish_time()
                 else:
                     self.tree_cache.cache_unfinished_req(req)
-
         self.stream_output(batch.reqs)
 
     def process_batch_result_decode(self, batch: ScheduleBatch, result):
@@ -1537,20 +1382,14 @@ class Scheduler:
             _,
             _,
         ) = self.tp_worker.get_worker_info()
-
-        # Print debug info
         logger.info(
             f"max_total_num_tokens={self.max_total_num_tokens}, "
             f"max_prefill_tokens={self.max_prefill_tokens}, "
             f"max_running_requests={self.max_running_requests}, "
         )
-        # Init memory pool and cache
+        # 初始化内存池
         self.req_to_token_pool, self.token_to_kv_pool = self.tp_worker.get_memory_pool()
-
-        if (
-            self.server_args.chunked_prefill_size is not None
-            and self.server_args.disable_radix_cache
-        ):
+        if (self.server_args.chunked_prefill_size is not None and self.server_args.disable_radix_cache):
             self.tree_cache = ChunkCache(
                 req_to_token_pool=self.req_to_token_pool,
                 token_to_kv_pool=self.token_to_kv_pool,
@@ -1564,10 +1403,18 @@ class Scheduler:
         self.tree_cache_metrics = {"total": 0, "hit": 0}
         self.policy = SchedulePolicy(self.schedule_policy, self.tree_cache)
 
-    def get_memory_usage(self):
+    def get_memory_usage(self) -> MemoryUsage:
         return self.tp_worker.get_memory_usage()
+    
+    def update_memory_usage(self):
+        memory_usage = self.get_memory_usage()
+        memory_usage.token_to_kv_pool_memory = (1 - self.rem_tokens / self.max_total_num_tokens)
+        self.send_to_controller.send_pyobj(GetMemoryUsageReqOutput("", self.model_name, memory_usage))
 
-    def resize_mem_pool(self, recv_req: ResizeMemPoolReqInput):
+    def resize_mem_pool(self, recv_req: ResizeMemPoolReqInput) -> bool:
+        """调整内存池大小
+        当前占用>目标大小时调整失败
+        """
         if_success = self.tp_worker.resize_memory_pool(recv_req.memory_pool_size)
         if if_success:
             worker_info = self.tp_worker.get_worker_info()
@@ -1578,25 +1425,23 @@ class Scheduler:
             self.max_req_input_len = worker_info[4]
             logger.info(
                 f"Memory pool resized successfully. "
-                f"Target memory pool size={recv_req.memory_pool_size}, "
+                f"Target memory pool size={recv_req.memory_pool_size}. "
                 f"New max_total_num_tokens={self.max_total_num_tokens}, "
                 f"max_prefill_tokens={self.max_prefill_tokens}, "
                 f"max_running_requests={self.max_running_requests}."
             )
         else:
-            logger.warning(
-                f"Can not resize memory pool because too many requests are running"
-            )
+            logger.warning(f"Can not resize memory pool because too many requests are running")
         return if_success
 
     def handle_activate_request(self, recv_req: ActivateReqInput):
-
+        """处理模型启动请求"""
+        # 启动前检查
         if self.tp_size > 1:
-            gpu_id = self.gpu_id
+            gpu_id = self.gpu_id # 多卡未实现
         else:
-            gpu_id = recv_req.gpu_id
-
-        if self._activated:
+            gpu_id = recv_req.gpu_id # 单卡可移动
+        if self._activated: # 已启动
             if self.tp_rank == 0:
                 logger.warning("Scheduler is already activated")
                 activate_req_output = ActivateReqOutput(
@@ -1604,96 +1449,73 @@ class Scheduler:
                     gpu_id=gpu_id,
                     model_name=recv_req.model_name,
                     instance_idx=recv_req.instance_idx,
-                    success=False,
+                    success=False, # 启动重复
                     memory_usage=self.get_memory_usage(),
                 )
-                self.send_to_detokenizer.send_pyobj(
-                    activate_req_output
-                )  # Can be removed if we don't need to send to detokenizer in the future
+                self.send_to_detokenizer.send_pyobj(activate_req_output)
                 self.redis_client.send_pyobj(
                     key=f"{self.server_args.engine_to_gpu_scheduler_key_prefix}:{self.gpu_id}",
                     obj=activate_req_output,
                 )
             return
         logger.info(f"Scheduler receives the activate request with rid: {recv_req.rid}")
+        # 禁止悬挂请求
         assert self.last_batch is None, "Last batch should be None"
         assert self.running_batch is None, "Running batch should be None"
-
+        # 启动runner
         start_time = time.perf_counter()
-
         self.tp_worker.activate_model_runner(
             memory_pool_size=recv_req.memory_pool_size,
             gpu_id=gpu_id,
             model_name=recv_req.model_name,
         )
-
         if self.enable_worker_pool:
             self.model_name = recv_req.model_name
-            model_path = self.model_names_to_model_paths[self.model_name]
             self.model_config = self.tp_worker.get_model_config()
             self.tokenizer = self.tp_worker.get_tokenizer()
-            self.context_len = self.server_args.context_length or get_context_length(
-                self.model_config.hf_config
-            )
-            change_logger_format(
-                prefix=f" GPU={recv_req.gpu_id} Worker {self.server_args.worker_id} ({self.model_name}) TP={self.tp_rank}"
-            )
-        else:
+            self.context_len = self.server_args.context_length or get_context_length(self.model_config.hf_config)
+            change_logger_format(prefix=f" GPU={recv_req.gpu_id} Worker {self.server_args.worker_id} ({self.model_name}) TP={self.tp_rank}")
+        else: # 更新GPU和日志输出
             if recv_req.gpu_id is not None and self.tp_size == 1:
                 self.gpu_id = recv_req.gpu_id
-                change_logger_format(
-                    prefix=f" {self.model_name} GPU={recv_req.gpu_id} TP={self.tp_rank}"
-                )
+                change_logger_format(prefix=f" {self.model_name} GPU={recv_req.gpu_id} TP={self.tp_rank}")
         logger.info("Model runner activated")
         if self.first_time_activate:
             self.pad_input_ids_func = self.tp_worker.get_pad_input_ids_func()
             self.first_time_activate = False
+        # 更新内存池
         self.update_memory_pool()
         logger.info("Memory pool updated")
-        # restore waiting queue
+        # 恢复等待队列
         self._restore_waiting_requests()
         logger.info("Waiting requests restored")
-
-        if not self._activated:
-            self._activated = True
-            logger.info(
-                f"Scheduler activated. Activation takes {time.perf_counter() - start_time:.2f} s"
-            )
-        else:
-            logger.warning("Scheduler is already activated")
-
+        # 启动完成
+        self._activated = True
+        logger.info(f"Scheduler activated. Activation takes {time.perf_counter() - start_time:.2f} s")
         if self.tp_size > 1:
             self.tp_worker.model_runner.tp_group.barrier()
-
         if self.tp_rank == 0:
-            memory_usage = self.get_memory_usage()
             activate_req_output = ActivateReqOutput(
                 rid=recv_req.rid,
                 gpu_id=gpu_id,
                 model_name=recv_req.model_name,
                 instance_idx=recv_req.instance_idx,
                 success=True,
-                memory_usage=memory_usage,
+                memory_usage=self.get_memory_usage(),
             )
-            self.send_to_detokenizer.send_pyobj(activate_req_output)
-
+            self.send_to_detokenizer.send_pyobj(activate_req_output) # 初始化detokenizer
             self.redis_client.send_pyobj(
                 key=f"{self.server_args.engine_to_gpu_scheduler_key_prefix}:{self.gpu_id}",
                 obj=activate_req_output,
             )
 
-    def handle_deactivate_request(
-        self, recv_req: DeactivateReqInput, result_queue: Optional[deque] = None
-    ):
+    def handle_deactivate_request(self, recv_req: DeactivateReqInput, result_queue: Optional[deque] = None):
+        """处理模型停止请求"""
         if self.tp_size > 1:
-            gpu_id = self.gpu_id
+            gpu_id = self.gpu_id # 多卡仅能在原地开关
         else:
-            gpu_id = recv_req.gpu_id
-
-        if self._activated:
-            self._activated = False
-            logger.info(f"Scheduler receives the deactivate requests with rid: {recv_req.rid}")
-        else:
+            gpu_id = recv_req.gpu_id # 单卡可移动
+        if not self._activated:
             if self.tp_rank == 0:
                 logger.warning("Scheduler is already deactivated")
                 deactivate_req_output = DeactivateReqOutput(
@@ -1701,30 +1523,28 @@ class Scheduler:
                     gpu_id=gpu_id,
                     model_name=recv_req.model_name,
                     instance_idx=recv_req.instance_idx,
-                    success=False,
+                    success=False, # 停止重复
                     memory_usage=self.get_memory_usage(),
                 )
-                # self.send_to_detokenizer.send_pyobj(
-                #     deactivate_req_output
-                # )  # Can be removed if we don't need to send to detokenizer in the future
-                # send to gpu scheduler via redis
+                self.send_to_detokenizer.send_pyobj(deactivate_req_output)
                 self.redis_client.send_pyobj(
                     key=f"{self.server_args.engine_to_gpu_scheduler_key_prefix}:{self.gpu_id}",
                     obj=deactivate_req_output,
                 )
             return
-
+        logger.info(f"Scheduler receives the deactivate requests with rid: {recv_req.rid}")
         start_time = time.perf_counter()
         logger.info(
-            f"In handle deactivate request, waiting queue size: {len(self.waiting_queue)}. Running batch size: {0 if self.running_batch is None else len(self.running_batch.reqs)}, last batch size: {0 if self.last_batch is None else len(self.last_batch.reqs)}"
+            f"In handle deactivate request, waiting queue size: {len(self.waiting_queue)}. "
+            f"Running batch size: {0 if self.running_batch is None else len(self.running_batch.reqs)}, "
+            f"last batch size: {0 if self.last_batch is None else len(self.last_batch.reqs)}"
         )
-        if recv_req.evict_waiting_requests or (
-            recv_req.preempt and recv_req.preempt_mode == PreemptMode.RECOMPUTE
-        ):
-            self._evict_all_waiting_requests()
-
-        # process the ongoing requests according to preempt and preempt_mode
+        # 清空模型请求
         preempt = recv_req.preempt
+        if recv_req.evict_waiting_requests or (preempt and recv_req.preempt_mode == PreemptMode.RECOMPUTE):
+            # 清空等待队列，禁止悬挂
+            self._evict_all_waiting_requests()
+        # 根据抢占策略处理剩余请求
         if not preempt:
             if self.enable_overlap:
                 self._run_to_completion_overlap(result_queue)
@@ -1732,32 +1552,24 @@ class Scheduler:
                 self._run_to_completion_normal()
         else:
             preempt_mode = recv_req.preempt_mode
-            # TODO: chunked prefill
-            if preempt_mode == PreemptMode.RETURN:
+            if preempt_mode == PreemptMode.RETURN: # 完成剩余请求
                 if self.enable_overlap:
                     self._complete_ongoing_requests_overlap(result_queue)
                 else:
                     self._complete_ongoing_requests_normal()
-            elif preempt_mode == PreemptMode.RECOMPUTE:
+            elif preempt_mode == PreemptMode.RECOMPUTE: # 撤回剩余请求
                 if self.enable_overlap:
                     self._retract_running_batch_overlap(result_queue)
                 else:
                     self._retract_running_batch_normal()
             else:
-                raise NotImplementedError(
-                    f"Preempt mode {preempt_mode} is not supported"
-                )
-        t1 = time.perf_counter()
-        time_taken = t1 - start_time
-        logger.info(
-            f"Process ongoing requests with preempt ({preempt}) takes {time_taken:.4f} s"
-        )
-
+                raise NotImplementedError(f"Preempt mode {preempt_mode} is not supported")
+        # 清空完成
+        self._activated = False
+        logger.info(f"Process ongoing requests with preempt ({preempt}) takes {time.perf_counter() - start_time:.4f} s")
         self.tp_worker.deactivate_model_runner()
-
         if self.tp_size > 1:
             self.tp_worker.model_runner.tp_group.barrier()
-
         if self.tp_rank == 0:
             deactivate_req_output = DeactivateReqOutput(
                 rid=recv_req.rid,
@@ -1767,18 +1579,15 @@ class Scheduler:
                 success=True,
                 memory_usage=self.get_memory_usage(),
             )
-            self.send_to_detokenizer.send_pyobj(
-                deactivate_req_output
-            )  # Can be removed if we don't need to send to detokenizer in the future
+            self.send_to_detokenizer.send_pyobj(deactivate_req_output)
             self.redis_client.send_pyobj(
                 key=f"{self.server_args.engine_to_gpu_scheduler_key_prefix}:{self.gpu_id}",
                 obj=deactivate_req_output,
             )
-            logger.info(
-                f"Total time taken for deactivation is {time.perf_counter() - start_time:.2f} s"
-            )
+            logger.info(f"Total time taken for deactivation is {time.perf_counter() - start_time:.2f} s")
 
     def _convert_req_to_frontend_reqs(self, req: Req) -> GenerateReqInput:
+        """对待清理请求生成传输对象"""
         sampling_params = {
             "max_new_tokens": req.sampling_params.max_new_tokens,
             "min_new_tokens": req.sampling_params.min_new_tokens,
@@ -1803,7 +1612,6 @@ class Scheduler:
             "json_schema": req.sampling_params.json_schema,
             "no_stop_trim": req.sampling_params.no_stop_trim,
         }
-
         generate_req = GenerateReqInput(
             rid=req.rid,
             text=req.origin_input_text if hasattr(req, "origin_input_text") else None,
@@ -1827,19 +1635,19 @@ class Scheduler:
         if not self.waiting_queue:
             return
         try:
-            # send back to frontend queue
+            # 将等待请求发送回前端
             for req in self.waiting_queue:
                 self.redis_client.send_pyobj(
                     key=f"{self.server_args.frontend_generate_request_key_prefix}:{self.model_name}",
                     obj=self._convert_req_to_frontend_reqs(req),
                 )
-
             logger.info(f"Evicted {len(self.waiting_queue)} requests back to Redis.")
         except Exception as e:
             logger.error(f"Error evicting requests to Redis: {e}")
         self.waiting_queue.clear()
 
     def _restore_waiting_requests(self):
+        """恢复等待队列"""
         self.waiting_queue.extend(self.waiting_queue_stash)
         self.waiting_queue_stash = []
 
@@ -1952,27 +1760,26 @@ class Scheduler:
         self.running_batch = None
         self.last_batch = None
 
-    def flush_cache(self):
-        """Flush the memory pool and cache."""
-        if len(self.waiting_queue) == 0 and (
-            self.running_batch is None or len(self.running_batch.reqs) == 0
-        ):
+    def flush_cache(self) -> bool:
+        """清空并刷新缓存
+        需要无运行中队列
+        """
+        if len(self.waiting_queue) == 0 and (self.running_batch is None or len(self.running_batch.reqs) == 0):
             self.tree_cache.reset()
-            self.tree_cache_metrics = {"total": 0, "hit": 0}
-            self.regex_fsm_cache.reset()
             self.req_to_token_pool.clear()
             self.token_to_kv_pool.clear()
+            self.tree_cache_metrics = {"total": 0, "hit": 0}
+            self.regex_fsm_cache.reset()
             torch.cuda.empty_cache()
             logger.info("Cache flushed successfully!")
-            if_success = True
+            return True
         else:
             logging.warning(
                 f"Cache not flushed because there are pending requests. "
                 f"#queue-req: {len(self.waiting_queue)}, "
                 f"#running-req: {0 if self.running_batch is None else len(self.running_batch.reqs)}"
             )
-            if_success = False
-        return if_success
+            return False
 
     def abort_request(self, recv_req: AbortReq):
         # Delete requests in the waiting queue
@@ -2026,9 +1833,12 @@ class Scheduler:
 
     @property
     def avg_input_len(self):
-        if self.num_received_requests <= 1:
-            return 1024
+        if self.num_received_requests <= 1: return 1024
         return self.total_input_len / self.num_received_requests
+    
+    @property
+    def rem_tokens(self):
+        return self.token_to_kv_pool.available_size() + self.tree_cache.evictable_size()
 
     def _signal_handler(self, signum, frame):
         """Handle signals to ensure cleanup before exit"""

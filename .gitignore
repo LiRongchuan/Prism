@@ -184,3 +184,6 @@ tmp*.txt
 work_dirs/
 *.csv
 *.tsv
+benchmark/multi-model/benchmark/
+benchmark/multi-model/benchmark-results/
+benchmark/multi-model/output-requests/

@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 class Sampler(nn.Module):
     def __init__(self):
         super().__init__()
-        self.use_nan_detectioin = not global_server_args_dict["disable_nan_detection"]
+        self.use_nan_detection = not global_server_args_dict["disable_nan_detection"]
 
     def forward(
         self,
@@ -41,7 +41,7 @@ class Sampler(nn.Module):
 
         logits = logits.contiguous()
 
-        if self.use_nan_detectioin and torch.any(torch.isnan(logits)):
+        if self.use_nan_detection and torch.any(torch.isnan(logits)):
             logger.warning("Detected errors during sampling! NaN in the logits.")
             logits = torch.where(
                 torch.isnan(logits), torch.full_like(logits, -1e5), logits

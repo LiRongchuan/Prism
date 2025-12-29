@@ -60,6 +60,7 @@ from sglang.multi_model.request_handler_worker_pool import RequestHandlerWorkerP
 
 from sglang.multi_model.scheduling.controller_global import run_controller_process
 from sglang.multi_model.scheduling.gpu.gpu_scheduler import run_gpu_scheduler_process
+from sglang.multi_model.scheduling.model_scheduler import run_model_scheduler_process
 from sglang.multi_model.utils.load_cpu_model import (
     init_torch_distributed_tp_1,
     load_shared_cpu_model,
@@ -76,6 +77,7 @@ from sglang.srt.managers.io_struct import (
     FlushCacheReq,
     GenerateReqInput,
     GetMemPoolSizeReq,
+    GetMemoryUsageReq,
     MemoryUsage,
     ResizeMemPoolReqInput,
     RewardReqInput,
@@ -187,6 +189,25 @@ async def get_memory_pool_size(obj: GetMemPoolSizeReq):
         )
 
 
+@app.api_route("/activate", methods=["GET", "POST"])
+async def activate(obj: ActivateReqInput):
+    """Activate a model."""
+    try:
+        success, memory_usage = await request_handler.activate(obj)
+        return ORJSONResponse(
+            {
+                "success": success,
+                "message": "Model activated successfully",
+                "memory_usage": memory_usage,
+            }
+        )
+    except Exception as e:
+        return ORJSONResponse(
+            {"success": False, "error": {"message": str(e), "type": type(e).__name__}},
+            status_code=HTTPStatus.BAD_REQUEST,
+        )
+        
+
 @app.api_route("/deactivate", methods=["GET", "POST"])
 async def deactivate(obj: DeactivateReqInput):
     """Deactivate a model."""
@@ -209,25 +230,6 @@ async def deactivate(obj: DeactivateReqInput):
         )
 
 
-@app.api_route("/activate", methods=["GET", "POST"])
-async def activate(obj: ActivateReqInput):
-    """Activate a model."""
-    try:
-        success, memory_usage = await request_handler.activate(obj)
-        return ORJSONResponse(
-            {
-                "success": success,
-                "message": "Model activated successfully",
-                "memory_usage": memory_usage,
-            }
-        )
-    except Exception as e:
-        return ORJSONResponse(
-            {"success": False, "error": {"message": str(e), "type": type(e).__name__}},
-            status_code=HTTPStatus.BAD_REQUEST,
-        )
-
-
 @app.api_route("/resize_mem_pool", methods=["GET", "POST"])
 async def resize_mem_pool(obj: ResizeMemPoolReqInput):
     """Resize the memory pool."""
@@ -239,7 +241,6 @@ async def resize_mem_pool(obj: ResizeMemPoolReqInput):
 async def generate_request(obj: GenerateReqInput, request: Request):
     """Handle a generate request."""
     if obj.stream:
-
         async def stream_results() -> AsyncIterator[bytes]:
             try:
                 async for out in request_handler.generate_request(obj, request):
@@ -253,7 +254,6 @@ async def generate_request(obj: GenerateReqInput, request: Request):
                     out, option=orjson.OPT_NON_STR_KEYS
                 ) + b"\n\n"
             yield b"data: [DONE]\n\n"
-
         return StreamingResponse(
             stream_results(),
             media_type="text/event-stream",
@@ -264,10 +264,7 @@ async def generate_request(obj: GenerateReqInput, request: Request):
             ret = await request_handler.generate_request(obj, request).__anext__()
             return ret
         except ValueError as e:
-            return ORJSONResponse(
-                {"error": {"message": str(e)}}, status_code=HTTPStatus.BAD_REQUEST
-            )
-
+            return ORJSONResponse({"error": {"message": str(e)}}, status_code=HTTPStatus.BAD_REQUEST)
 
 app.post("/generate")(generate_request)
 app.put("/generate")(generate_request)
@@ -275,6 +272,7 @@ app.put("/generate")(generate_request)
 
 @dataclasses.dataclass
 class EngineInfo:
+    """每个实例一个EngineInfo"""
     port_args: PortArgs
     model_path: str
     # scheduler_procs: List[mp.Process]
@@ -490,6 +488,24 @@ def launch_gpu_scheduler_process(
     gpu_scheduler_proc.start()
     reader.recv()
     logger.info(f"GPU scheduler process started for GPU {gpu_id}")
+    
+    
+def launch_model_scheduler_process(
+    multi_model_server_args: MultiModelServerArgs,
+    model_names_to_model_paths: Dict[str, str]
+):
+    reader, writer = mp.Pipe(duplex=False)
+    gpu_scheduler_proc = mp.Process(
+        target=run_model_scheduler_process,
+        args=(
+            multi_model_server_args,
+            model_names_to_model_paths,
+            writer,
+        )
+    )
+    gpu_scheduler_proc.start()
+    reader.recv()
+    logger.info(f"Model scheduler process started")
 
 
 def launch_http_server(
@@ -614,6 +630,7 @@ def launch_model_engines(
     model_names_to_model_paths: Dict[str, str],
     request_handler_ipc_name: str,
     schedulers_to_controller_ipc_name: Optional[str] = None,
+    schedulers_to_model_scheduler_ipc_name: Optional[str] = None,
     input_queue: Optional[torch.multiprocessing.Queue] = None,
     output_queues: Optional[Dict[str, torch.multiprocessing.Queue]] = None,
 ):
@@ -684,7 +701,9 @@ def launch_model_engines(
                 ]
             # Allocate ports for inter-process communications
             port_args = PortArgs.init_with_request_handler_ipc_name(
-                start_port, request_handler_ipc_name, schedulers_to_controller_ipc_name
+                start_port, request_handler_ipc_name,
+                schedulers_to_controller_ipc_name,
+                schedulers_to_model_scheduler_ipc_name
             )
             start_port = port_args.nccl_port
             engine_id = f"{model_config.model_name}_{i}"
@@ -887,15 +906,13 @@ def launch_multi_model_server(
         )
 
     request_handler_ipc_name = tempfile.NamedTemporaryFile(delete=False).name
-    request_handler_to_controller_ipc_name = tempfile.NamedTemporaryFile(
-        delete=False
-    ).name
+    request_handler_to_controller_ipc_name = tempfile.NamedTemporaryFile(delete=False).name
     if multi_model_server_args.enable_controller:
-        schedulers_to_controller_ipc_name = tempfile.NamedTemporaryFile(
-            delete=False
-        ).name
-    else:
-        schedulers_to_controller_ipc_name = None
+        schedulers_to_controller_ipc_name = tempfile.NamedTemporaryFile(delete=False).name
+    else: schedulers_to_controller_ipc_name = None
+    if multi_model_server_args.enable_model_scheduler:
+        schedulers_to_model_scheduler_ipc_name = tempfile.NamedTemporaryFile(delete=False).name
+    else: schedulers_to_model_scheduler_ipc_name = None
 
     # get model_names_to_model_paths
     model_configs = multi_model_server_args.model_configs
@@ -969,8 +986,16 @@ def launch_multi_model_server(
             model_names_to_model_paths,
             request_handler_ipc_name,
             schedulers_to_controller_ipc_name,
+            schedulers_to_model_scheduler_ipc_name,
             input_queue,
             output_queues,
+        )
+
+    # Launch the model scheduler
+    if multi_model_server_args.enable_model_scheduler:
+        launch_model_scheduler_process(
+            multi_model_server_args,
+            model_names_to_model_paths
         )
 
     # Launch the controller
@@ -992,7 +1017,7 @@ def launch_multi_model_server(
                 model_names_to_model_paths,
                 engine_info_dict,
                 gpu_id,
-                init_placements[gpu_id],
+                init_placements[gpu_id] if init_placements is not None else None,
             )
 
     # Launch the request handler

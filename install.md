@@ -14,6 +14,7 @@ Test the redis server is running:
 sudo docker start my-redis
 ```
 ```bash
+python3
 import redis
 r = redis.Redis(host='localhost', port=6379, db=0)
 r.set('foo', 'bar')
@@ -68,7 +69,7 @@ pip install -e .
 # pip install flashinfer==0.1.6 -i https://flashinfer.ai/whl/cu121/torch2.4/
 
 cd /sgl-workspace/kvcached
-pip install -e .
+pip install --no-build-isolation -e .
 
 pip install tensordict --upgrade
 pip install redis
@@ -88,7 +89,7 @@ huggingface-cli login
 Launch server with model_path:
 ```bash
 cd /sgl-workspace/prism-research/benchmark/multi-model
-python3 -m sglang.launch_multi_model_server --port 30000 --disable-cuda-graph --model-config-file ./model_configs/model_config_single.json --disable-radix-cache --enable-elastic-memory --use-kvcached-v0 --log-file ./server.log
+python3 -m sglang.launch_multi_model_server --port 30000 --disable-cuda-graph --model-config-file ./model_configs/1_gpu_2_model.json --disable-radix-cache --enable-controller --enable-elastic-memory --use-kvcached-v0 --log-file ./server.log --policy resize-global
 ```
 
  Options:
@@ -100,7 +101,6 @@ python3 -m sglang.launch_multi_model_server --port 30000 --disable-cuda-graph --
 
 Run tests:
 ```bash
-cd /sgl-workspace/prism-research/benchmark/multi-model
 python3 benchmark.py -n 1
 ```
 
@@ -122,34 +122,29 @@ Launch server with
 ```bash
 cd /sgl-workspace/prism-research/benchmark/multi-model
 
-python3 -m sglang.launch_multi_model_server --port 30000 --model-config-file ./model_configs/swap_2.json  --disable-cuda-graph --disable-radix-cache --enable-controller --enable-cpu-share-memory --enable-elastic-memory --use-kvcached-v0 --policy simple-global --log-file ./server.log --async-loading
+python3 -m sglang.launch_multi_model_server --port 30000 --model-config-file ./model_configs/llama_1_gpu_2_model.json  --disable-cuda-graph --disable-radix-cache --enable-controller --enable-cpu-share-memory --enable-elastic-memory --use-kvcached-v0 --policy resize-global --log-file ./server.log --async-loading
+
+python3 -m sglang.launch_multi_model_server --port 30000 --model-config-file ./model_configs/llama_1_gpu_2_model_prism.json  --disable-cuda-graph --disable-radix-cache --enable-controller --enable-gpu-scheduler --enable-cpu-share-memory --enable-elastic-memory --use-kvcached-v0 --policy baseline --log-file ./server.log --async-loading
 
 python3 benchmark.py \
   --base-url http://127.0.0.1:30000 \
-  --num-models 2 \
-  --num-gpus 4
-```
-
-```bash
-cd /sgl-workspace/prism-research/benchmark/multi-model
-
-python3 -m sglang.launch_multi_model_server --port 30000 --model-config-file ./model_configs/swap_4.json  --disable-cuda-graph --disable-radix-cache --enable-controller --enable-cpu-share-memory --enable-elastic-memory --use-kvcached-v0 --policy simple-global --log-file ./server.log --async-loading
-
-python3 benchmark.py \
-  --base-url http://127.0.0.1:30000 \
-  --num-models 4 \
-  --num-gpus 4
-```
-
-```bash
-cd /sgl-workspace/prism-research/benchmark/multi-model
-
-python3 -m sglang.launch_multi_model_server --port 30000 --model-config-file ./model_configs/swap_4.json  --disable-cuda-graph --disable-radix-cache --enable-controller --enable-cpu-share-memory --enable-elastic-memory --use-kvcached-v0 --policy tp-global --log-file ./server.log --async-loading
+  --real-trace ./real_trace.pkl \
+  --model-ids 0 1 \
+  --num-gpus 1 \
+  --workload-scale 1 \
+  --rate-scale 5 \
+  --ttft-slo-scale 10 \
+  --tpot-slo-scale 10
 
 python3 benchmark.py \
   --base-url http://127.0.0.1:30000 \
-  --num-models 4 \
-  --num-gpus 4
+  --sharedgpt ./sharedgpt/sharedgpt_n3_rate_4.json \
+  --model-ids 0 1 \
+  --num-gpus 4 \
+  --workload-scale 1 \
+  --rate-scale 1 \
+  --ttft-slo-scale 10 \
+  --tpot-slo-scale 10
 ```
 
 Options: 

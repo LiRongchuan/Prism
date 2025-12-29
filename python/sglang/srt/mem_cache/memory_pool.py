@@ -37,8 +37,7 @@ PHYSICAL_MEM_CHECK_FREQ = 0.01
 
 
 class ReqToTokenPool:
-    """A memory pool that maps a request to its token locations."""
-
+    """ Req->Token内存池: 映射请求->token地址 """
     def __init__(
         self,
         size: int,
@@ -52,32 +51,25 @@ class ReqToTokenPool:
         self.max_context_len = max_context_len
         self.device = device
         self.gpu_id = gpu_id
+        self.use_records = use_records
+        self.write = self.write_with_records if self.use_records else self.write_without_records
         self._init_req_to_token(min_reserve_mem)
         self.free_slots = list(range(size))
         self.write_records = []
-        self.use_records = use_records
-
-        if self.use_records:
-            self.write = self.write_with_records
-        else:
-            self.write = self.write_without_records
 
     def _init_req_to_token(self, min_reserve_mem: float):
-        required_bytes = self.size * self.max_context_len * 4
+        required_bytes = self.size * self.max_context_len * 4 # (size, max_context_len)大小的int32 Tensor
         required_mem = required_bytes / 1024**3
-
-        # min_reserve_mem is GB
-        # wait until the memory is enough
         tic = time.time()
-        while (
-            get_available_gpu_memory(self.device, self.gpu_id) - min_reserve_mem
-            < required_mem
-        ):
+        while get_available_gpu_memory(self.device, self.gpu_id) - min_reserve_mem < required_mem:
+            # 等待空间充足
             logger.info(
-                f"Waiting for enough memory to initialize the request to token pool.... Current available memory: {get_available_gpu_memory(self.device, self.gpu_id):.2f} GB, min reserve mem: {min_reserve_mem:.2f} GB, required memory for req_to_token pool: {required_mem:.2f} GB"
+                f"Waiting for enough memory to initialize the request to token pool.... "
+                f"Current available memory: {get_available_gpu_memory(self.device, self.gpu_id):.2f} GB, "
+                f"min reserve mem: {min_reserve_mem:.2f} GB, "
+                f"required memory for req_to_token pool: {required_mem:.2f} GB"
             )
             time.sleep(0.1)
-
         start_create = time.time()
         self.req_to_token = torch.zeros(
             (self.size, self.max_context_len),
@@ -85,37 +77,37 @@ class ReqToTokenPool:
             device=f"{self.device}:{self.gpu_id}",
         )
         logger.info(
-            f"Initialize req_to_token pool end. Takes {time.time() - start_create:.4f}s. Wait time: {start_create - tic:.4f}s. Init time: {time.time() - start_create:.4f}s"
+            f"Initialize req_to_token pool end. "
+            f"Wait time: {start_create - tic:.4f}s. "
+            f"Init time: {time.time() - start_create:.4f}s"
         )
 
     def write(self, indices, values):
-        # Keep the signature for type checking. It will be assigned during runtime.
+        # NOTE: 用于类型检查，运行时赋值
         raise NotImplementedError()
 
     def available_size(self):
         return len(self.free_slots)
 
     def alloc(self, need_size: int) -> List[int]:
-        if need_size > len(self.free_slots):
-            return None
-
+        """分配slots，返回slot ids"""
+        if need_size > len(self.free_slots): return None
         select_index = self.free_slots[:need_size]
         self.free_slots = self.free_slots[need_size:]
-
         return select_index
 
     def free(self, free_index: Union[int, List[int]]):
+        """释放slots"""
         if isinstance(free_index, (int,)):
             self.free_slots.append(free_index)
         else:
             try:
                 self.free_slots.extend(free_index)
             except TypeError:
-                raise TypeError(
-                    f"free_index must be an int or a list of ints, but got {type(free_index)}. free_index: {free_index}"
-                )
+                raise TypeError(f"free_index must be an int or a list of ints, but got {type(free_index)}. free_index: {free_index}")
 
     def clear(self):
+        """清空slots及写入记录"""
         self.free_slots = list(range(self.size))
         self.write_records = []
 
@@ -127,22 +119,24 @@ class ReqToTokenPool:
         self.write_records.append((indices, values))
 
     def get_write_records(self):
+        """获取并清理写入记录"""
         ret = self.write_records
         self.write_records = []
         return ret
 
     def apply_write_records(self, write_records: List[Tuple]):
+        """根据记录写入"""
         for indices, values in write_records:
             self.req_to_token[indices] = values
 
     def release(self):
+        """释放Tensor"""
         self.req_to_token.untyped_storage().resize_(0)
         self.req_to_token = None
 
 
 class BaseTokenToKVPool:
-    """A memory pool that maps a token location to its kv cache data."""
-
+    """ Token->KV Cache内存池: token地址->kv cache数据 """
     def __init__(
         self,
         size: int,
@@ -153,49 +147,44 @@ class BaseTokenToKVPool:
     ):
         self.size = size
         self.dtype = dtype
-        if dtype == torch.float8_e5m2:
-            # NOTE: Store as torch.uint8 because Tensor index_put is not implemented for torch.float8_e5m2
-            self.store_dtype = torch.uint8
-        else:
-            self.store_dtype = dtype
+        # NOTE: Store as torch.uint8 because Tensor index_put is not implemented for torch.float8_e5m2
+        self.store_dtype = torch.uint8 if dtype == torch.float8_e5m2 else dtype
         self.device = device
         self.gpu_id = gpu_id
         self.min_reserve_mem = min_reserve_mem
-
-        self.free_slots = None
-        self.is_not_in_free_group = True
-        self.free_group = []
         self.clear()
 
     def available_size(self):
         return len(self.free_slots)
 
-    def alloc(self, need_size: int):
-        if need_size > len(self.free_slots):
-            return None
-
+    def alloc(self, need_size: int) -> torch.Tensor:
+        """分配slots"""
+        if need_size > len(self.free_slots): return None
         select_index = self.free_slots[:need_size]
         self.free_slots = self.free_slots[need_size:]
-
         return select_index.to(f"{self.device}:{self.gpu_id}", non_blocking=True)
 
     def free(self, free_index: torch.Tensor):
-        if self.is_not_in_free_group:
-            self.free_slots = torch.concat((self.free_slots, free_index.cpu()))
-        else:
+        """释放slots"""
+        if self.is_in_free_group:
             self.free_group.append(free_index)
+        else:
+            self.free_slots = torch.concat((self.free_slots, free_index.cpu()))
 
     def free_group_begin(self):
-        self.is_not_in_free_group = False
+        """成组释放开始，空闲slot加入free group"""
+        self.is_in_free_group = True
         self.free_group = []
 
     def free_group_end(self):
-        self.is_not_in_free_group = True
+        """成组释放结束，释放free group，空闲slot直接释放"""
+        self.is_in_free_group = False
         if self.free_group:
             self.free(torch.concat(self.free_group))
 
     def clear(self):
-        # The padded slot 0 is used for writing dummy outputs from padded tokens.
+        """初始化free slots"""
+        # slot0用于填充token的占位输出
         self.free_slots = torch.arange(1, self.size + 1, dtype=torch.int32)
         self.is_in_free_group = False
         self.free_group = []
@@ -223,10 +212,11 @@ class BaseTokenToKVPool:
 
 
 class MHATokenToKVPool(BaseTokenToKVPool):
-
+    """ Token->KV Cache内存池: MHA实现 """
     def __init__(
         self,
         size: int,
+        max_size: int,
         dtype: torch.dtype,
         head_num: int,
         head_dim: int,
@@ -252,6 +242,7 @@ class MHATokenToKVPool(BaseTokenToKVPool):
         self.head_dim = head_dim
         self.layer_num = layer_num
         self.enable_elastic_memory = enable_elastic_memory
+        self.max_alloc_token_num = max_size
         self.last_available_size = None
         self.enable_overlap = enable_overlap
         self.use_kvcached_v0 = use_kvcached_v0
@@ -263,47 +254,43 @@ class MHATokenToKVPool(BaseTokenToKVPool):
             try:
                 from kvcached import ops as kvcached_ops
                 from kvcached.slab_allocator import KVCacheManager
-
                 self.kvcached_ops = kvcached_ops
                 self.kv_cache_manager = KVCacheManager
-
                 if not enable_worker_pool:
                     self.kvcached_ops.init_kvcached(self.gpu_id)
-
                 self.init_kv_allocator()
             except ImportError as e:
-                raise ImportError(
-                    "kvcached package is required for elastic memory. Please install it first."
-                ) from e
+                raise ImportError("kvcached package is required for elastic memory. Please install it first.") from e
         else:
             self._init_kv_cache(self.min_reserve_mem)
 
     def init_kv_allocator(self):
-        k_buffer, v_buffer = self.kvcached_ops.sgl_alloc_kv_cache(
-            self.size,
+        """弹性显存分配"""
+        # C++层分配足够大的vaddr空间
+        self.k_buffer, self.v_buffer = self.kvcached_ops.sgl_alloc_kv_cache(
+            self.max_alloc_token_num * 20, # 临时设置，保证映射不溢出
             self.head_num,
             self.head_dim,
             self.dtype,
             f"{self.device}:{self.gpu_id}",
             self.layer_num,
         )
-        self.k_buffer = k_buffer
-        self.v_buffer = v_buffer
         self.cell_size = self.head_num * self.head_dim * self.dtype.itemsize
+        # Python层管理器设置为所需大小
         if self.use_kvcached_v0:
             self.kv_allocator = self.kv_cache_manager(
-                self.size,
-                1,
-                self.cell_size,
+                num_blocks=self.size,
+                block_size=1,
+                cell_size=self.cell_size,
                 num_layers=self.layer_num,
                 shm=self.shm,
             )
             logger.info("Elastic memory: kv_cache_manager_v0 initialized")
         else:
             self.kv_allocator = self.kv_cache_manager(
-                self.size,
-                1,
-                self.cell_size,
+                num_blocks=self.size,
+                block_size=1,
+                cell_size=self.cell_size,
                 num_layers=self.layer_num,
                 enable_overlap=self.enable_overlap,
                 ipc_name=self.ipc_name,
@@ -311,6 +298,7 @@ class MHATokenToKVPool(BaseTokenToKVPool):
             logger.info("Elastic memory: kv_cache_manager initialized")
 
     def _init_kv_cache(self, min_reserve_mem: float):
+        """固定显存分配"""
         tic = time.time()
         cell_size = (
             self.head_num
@@ -321,17 +309,15 @@ class MHATokenToKVPool(BaseTokenToKVPool):
         )
         required_bytes = cell_size * self.size
         required_mem = required_bytes / 1024**3
-
-        # wait until the memory is enough, leave some room to allow required mem to be allocated
-        while (
-            get_available_gpu_memory(self.device, self.gpu_id)
-            < required_mem + min_reserve_mem
-        ):
+        while (get_available_gpu_memory(self.device, self.gpu_id) < required_mem + min_reserve_mem):
+            # 等待空间充足
             logger.info(
-                f"Waiting for enough memory to initialize the kv cache.... Current available memory: {get_available_gpu_memory(self.device, self.gpu_id):.2f} GB, min reserve mem: {min_reserve_mem:.2f} GB, required memory for kv cache: {required_mem:.2f} GB"
+                f"Waiting for enough memory to initialize the kv cache.... "
+                f"Current available memory: {get_available_gpu_memory(self.device, self.gpu_id):.2f} GB, "
+                f"min reserve mem: {min_reserve_mem:.2f} GB, "
+                f"required memory for kv cache: {required_mem:.2f} GB"
             )
             time.sleep(0.1)
-
         start_create = time.time()
         # [size, head_num, head_dim] for each layer
         # The padded slot 0 is used for writing dummy outputs from padded tokens.
@@ -352,12 +338,16 @@ class MHATokenToKVPool(BaseTokenToKVPool):
             for _ in range(self.layer_num)
         ]
         logger.info(
-            f"Initialize token_to_kv pool end. Takes {time.time() - start_create:.4f}s. Wait time: {start_create - tic:.4f}s. Init time: {time.time() - start_create:.4f}s"
+            f"Initialize token_to_kv pool end. Takes {time.time() - start_create:.4f}s. "
+            f"Wait time: {start_create - tic:.4f}s. Init time: {time.time() - start_create:.4f}s"
         )
 
     def alloc(self, need_size: int):
         if self.enable_elastic_memory:
-            indices = self.kv_allocator.alloc(need_size)
+            try:
+                indices = self.kv_allocator.alloc(need_size) # 页索引
+            except Exception:
+                indices = None
             if self.use_kvcached_v0:
                 if isinstance(indices, list):
                     indices = torch.tensor(
@@ -366,9 +356,7 @@ class MHATokenToKVPool(BaseTokenToKVPool):
                         device=f"{self.device}:{self.gpu_id}",
                     )
                 elif indices is not None:
-                    indices = indices.to(
-                        f"{self.device}:{self.gpu_id}", non_blocking=True
-                    )
+                    indices = indices.to(f"{self.device}:{self.gpu_id}", non_blocking=True)
                 return indices
             else:
                 return (
@@ -392,7 +380,6 @@ class MHATokenToKVPool(BaseTokenToKVPool):
         avail_phy_mem_size, _ = torch.cuda.mem_get_info()
         avail_phy_mem_size -= min_reserve_mem_size * (1 << 30)
         from kvcached.slab_allocator import PAGE_SIZE
-
         avail_phy_pages = avail_phy_mem_size // PAGE_SIZE
         # Each layer needs to reserve K and V tensors.
         avail_phy_blocks = (avail_phy_pages // self.layer_num // 2) * (

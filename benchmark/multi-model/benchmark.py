@@ -3,6 +3,7 @@ import asyncio
 import csv
 import json
 import os
+import yaml
 import random
 import resource
 import sys
@@ -11,7 +12,7 @@ import traceback
 import warnings
 from dataclasses import dataclass, field
 from datetime import datetime
-from trace import Request, TraceConfig, generate_synthetic_reqs
+from request_trace import Request, TraceConfig, generate_synthetic_reqs, RealWorldTrace, SharedgptTrace
 from typing import Dict, List, Optional, Tuple, Union
 
 import aiohttp
@@ -30,9 +31,9 @@ class RequestFuncOutput:
     success: bool = False
     latency: float = 0.0
     latency_server: float = 0.0
-    ttft: float = 0.0  # Time to first token
-    itl: List[float] = field(default_factory=list)  # List of inter-token latencies
+    ttft: float = 0.0
     tpot: float = 0.0
+    itl: List[float] = field(default_factory=list) # List of inter-token latencies
     wait_time: float = 0.0
 
     # Time info for plotting
@@ -67,7 +68,6 @@ async def send_generate_request(
     pload = {
         "text": req.prompt,
         "sampling_params": sampling_params,
-        "rid": req.req_id,
         "model": req.model,
         "slo": req.slo,
         "slo_ttft": req.slo_ttft,
@@ -78,6 +78,7 @@ async def send_generate_request(
 
     async with aiohttp.ClientSession(timeout=AIOHTTP_TIMEOUT) as session:
         output = RequestFuncOutput()
+        output.rid = req.req_id
         output.prompt_len = req.prompt_len
         output.slo = req.slo
         output.slo_ttft = req.slo_ttft
@@ -118,16 +119,12 @@ async def send_generate_request(
                         if data["meta_info"]:
                             finish_reason = data["meta_info"]["finish_reason"]["type"]
                             if finish_reason == "abort":
-                                print(
-                                    f"Benchmark: request {req.req_id} was aborted due to exceed slo."
-                                )
+                                print(f"Benchmark: request {req.req_id} was aborted due to exceed slo.")
                                 success = False
                                 reason = "Exceed SLO"
                             arrival_time = data["meta_info"]["arrival_timestamp"]
                             out_queue_time = data["meta_info"]["out_queue_timestamp"]
-                            prefill_finish_time = data["meta_info"][
-                                "prefill_finish_timestamp"
-                            ]
+                            prefill_finish_time = data["meta_info"]["prefill_finish_timestamp"]
                             decode_timestamps = data["meta_info"]["decode_timestamps"]
                             finish_time = data["meta_info"]["finish_timestamp"]
 
@@ -156,9 +153,6 @@ async def send_generate_request(
                     else:
                         output.error = reason
                         output.success = False
-                    # print(
-                    #     f"Req_id {req.req_id}, Req.model: {req.model}, Success: {output.success}, Latency: {output.latency:.2f}s, Output len: {output.output_len}"
-                    # )
                 else:
                     output.error = response.reason or ""
                     output.success = False
@@ -698,9 +692,7 @@ async def run_generation_basic(
         )
         task._idx = i
         if debug:
-            print(
-                f"Sending request {req.req_id} for model {req.model} at time {time.perf_counter() - start:.2f}"
-            )
+            print(f"Sending request {req.req_id} for model {req.model} at time {time.perf_counter() - start:.2f}")
         tasks.append(task)
 
     while True:
@@ -1444,7 +1436,7 @@ def save_results(
             # "dataset_name": args.dataset_name,
             "exp_name": exp_name,
             "num_models": len(trace_config.model_paths),
-            # "request_rate": trace_config.req_rate,
+            "request_rate": trace_config.req_rate,
             # "alpha": trace_config.alpha,
             # "cv": trace_config.cv,
             # "num_swaps": num_swaps,
@@ -1486,9 +1478,11 @@ def save_results(
             "std_itl_ms": metrics.std_itl_ms,
             "p99_itl_ms": metrics.p99_itl_ms,
             "p95_itl_ms": metrics.p95_itl_ms,
+            "models": [output.model for output in outputs],
             "ttfts": [output.ttft for output in outputs],
-            "itls": [output.itl for output in outputs],
-            "errors": [output.error for output in outputs],
+            "tpots": [output.tpot for output in outputs],
+            # "itls": [output.itl for output in outputs],
+            # "errors": [output.error for output in outputs],
             "average_attainment_ttft": metrics.average_attainment_ttft,
             "average_attainment_tpot": metrics.average_attainment_tpot,
         }
@@ -1692,40 +1686,29 @@ async def benchmark_with_timeout(
         return "failed"
 
 
-def run_benchmark(
-    args_: argparse.Namespace, trace_config, requests=None, timeout=60 * 60
-):
+def run_benchmark(args_: argparse.Namespace, trace_config, requests=None, timeout=60 * 60):
     global args
     args = args_
     server = args.base_url or f"http://{args.host}:{args.port}"
-
     # Set global environments
     set_ulimit()
     random.seed(args.seed)
     np.random.seed(args.seed)
-
     if requests is None:
         requests = generate_synthetic_reqs(trace_config)
-
     if args.debug:
         print("num requests:", len(requests))
         for req in requests[:10]:
-            print(
-                f"req {req.req_id}: model {req.model}, arrival time {req.arrival_time:.2f}, input len {req.prompt_len}, output len {req.output_len}"
-            )
+            print(f"req {req.req_id}: model {req.model}, arrival time {req.arrival_time:.2f}, input len {req.prompt_len}, output len {req.output_len}")
             print(req)
     # benchmark with 20 minutes timeout
-    results = asyncio.run(
-        benchmark_with_timeout(args, requests, server, trace_config, timeout)
-    )
-
+    results = asyncio.run(benchmark_with_timeout(args, requests, server, trace_config, timeout))
     return results
 
 
 def set_ulimit(target_soft_limit=65535):
     resource_type = resource.RLIMIT_NOFILE
     current_soft, current_hard = resource.getrlimit(resource_type)
-
     if current_soft < target_soft_limit:
         try:
             resource.setrlimit(resource_type, (target_soft_limit, current_hard))
@@ -1734,10 +1717,9 @@ def set_ulimit(target_soft_limit=65535):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Benchmark the online serving throughput."
-    )
+    parser = argparse.ArgumentParser(description="Benchmark the online serving throughput.")
     parser.add_argument("--num-models", "-n", type=int, default=4)
+    parser.add_argument("--model-ids", type=int, nargs='+', default=[0, 1])
     parser.add_argument(
         "--model-paths",
         "-m",
@@ -1748,7 +1730,6 @@ if __name__ == "__main__":
     parser.add_argument("--host", type=str, default="localhost")
     parser.add_argument("--port", type=int, default=30000)
     parser.add_argument("--base-url", type=str, default=None)
-
     parser.add_argument("--dataset", type=str, help="Path to the dataset.")
     parser.add_argument("--debug", action="store_true")
     parser.add_argument("--append", action="store_true")
@@ -1762,7 +1743,6 @@ if __name__ == "__main__":
         help="Name of the experiment. It will be used as a key in the output json.",
     )
     parser.add_argument("--disable-tqdm", action="store_true")
-
     parser.add_argument(
         "--policy",
         type=str,
@@ -1770,7 +1750,6 @@ if __name__ == "__main__":
         choices=["adaptive", "one-queue", "sequential-swapping"],
         help="The policy to swap models. Options: adaptive, one-queue, sequential-swapping",
     )
-
     parser.add_argument(
         "--dynamic-models",
         type=str,
@@ -1790,8 +1769,9 @@ if __name__ == "__main__":
     )
     parser.add_argument("--memory-pool-size", type=float, default=16)
     parser.add_argument("--enable-elastic-memory", action="store_true")
-    parser.add_argument("--req-rate", type=int, default=20)
+    parser.add_argument("--req-rate", type=int, default=5)
     parser.add_argument("--real-trace", type=str, default=None)
+    parser.add_argument("--sharedgpt", type=str, default=None)
     parser.add_argument("--csv-trace", type=str, default=None, help="Path to CSV trace file")
     parser.add_argument("--micro-benchmark", action="store_true")
     parser.add_argument("--e2e-benchmark", action="store_true")
@@ -1807,91 +1787,80 @@ if __name__ == "__main__":
     parser.add_argument("--model-lst", type=str, default="model_lst.yml")
     parser.add_argument("--num-gpus", type=int, default=1)
     parser.add_argument("--profile", action="store_true")
+    parser.add_argument("--workload-scale", type=float, default=2)
+    parser.add_argument("--rate-scale", type=int, default=1)
     parser.add_argument("--ttft-slo-scale", type=float, default=5)
     parser.add_argument("--tpot-slo-scale", type=float, default=5)
     parser.add_argument("--mmy-debug", action="store_true")
     args = parser.parse_args()
-
-    if args.model_paths is None:
-        model_paths = [f"model_{i+1}" for i in range(args.num_models)]
-        # model_paths = [f"model_{i}" for i in range(args.num_models, 0, -1)]
-    else:
-        model_paths = args.model_paths
-
     if args.real_trace:
         print(f"Real trace file: {args.real_trace}")
-        from trace import RealWorldTrace
-
-        # If model_paths were provided as arguments, use them directly
-        # Otherwise, load from yaml file (original behavior)
         if args.model_paths is not None:
-            # Use the model_paths passed as arguments (TP mode)
             config = TraceConfig(
-                ttft_slo_scale=args.ttft_slo_scale,
-                tpot_slo_scale=args.tpot_slo_scale,
                 model_paths=args.model_paths,
-                slo=100,
-                micro_benchmark=args.micro_benchmark,
-                e2e_benchmark=args.e2e_benchmark,
-                time_scale=args.time_scale,
-                replication=args.replication,
-            )
-            
-            # Use the TP e2e benchmark method (from trace_1.py)
-            requests = RealWorldTrace(
-                pkl_file_path=args.real_trace
-            ).generate_e2e_benchmark_reqs(config, num_models=args.num_models)
-        else:
-            # Use yaml file and 18m method (original behavior)
-            import yaml
-
-            with open(args.model_lst, "r") as file:
-                model_list = yaml.safe_load(file)["model"]
-
-            config = TraceConfig(
                 ttft_slo_scale=args.ttft_slo_scale,
                 tpot_slo_scale=args.tpot_slo_scale,
-                model_paths=model_list,
                 slo=100,
                 micro_benchmark=args.micro_benchmark,
                 e2e_benchmark=args.e2e_benchmark,
                 time_scale=args.time_scale,
                 replication=args.replication,
             )
-            
-            requests = RealWorldTrace(
-                pkl_file_path=args.real_trace
-            ).generate_e2e_benchmark_reqs_18m(config, num_models=args.num_models)
-        
-        # Check if this is TP mode (model_paths provided directly)
-        if args.model_paths is not None:
-            # TP mode - run directly
+            requests = RealWorldTrace(args.real_trace).generate_real_reqs(config, model_ids=args.model_ids)
             asyncio.run(run_tp_mode(args, config, requests))
         else:
-            # Complex mode - use original benchmark logic
+            with open(args.model_lst, "r") as file:
+                model_list = yaml.safe_load(file)["model"]
+            config = TraceConfig(
+                model_paths=model_list,
+                ttft_slo_scale=args.ttft_slo_scale,
+                tpot_slo_scale=args.tpot_slo_scale,
+                slo=100,
+                workload_scale=args.workload_scale,
+                rate_scale=args.rate_scale,
+                micro_benchmark=args.micro_benchmark,
+                e2e_benchmark=args.e2e_benchmark,
+                time_scale=args.time_scale,
+                replication=args.replication,
+            )
+            requests = RealWorldTrace(args.real_trace).generate_real_reqs(config, model_ids=args.model_ids)
             run_benchmark(args, config, requests)
-    else:
-        # Handle synthetic trace case (no real-trace file provided)
-        print("Using synthetic trace generation")
-        
-        # Create TraceConfig for synthetic trace
+    elif args.sharedgpt:
+        print("Using synthetic trace generation with SharedGPT")
+        with open(args.model_lst, "r") as file:
+            model_list = yaml.safe_load(file)["model"]
         config = TraceConfig(
-            req_rate=args.req_rate,
-            duration=60,  # default duration
-            input_range=(256, 512),  # default input range
-            output_range=(256, 512),  # default output range  
-            model_paths=model_paths,
-            seed=args.seed,
-            alpha=2.1,  # default alpha for power law distribution
-            cv=1,  # default coefficient of variation
-            slo=10,  # default SLO
+            model_paths=model_list,
+            ttft_slo_scale=args.ttft_slo_scale,
+            tpot_slo_scale=args.tpot_slo_scale,
+            slo=100,
+            workload_scale=args.workload_scale,
+            rate_scale=args.rate_scale,
             micro_benchmark=args.micro_benchmark,
             e2e_benchmark=args.e2e_benchmark,
             time_scale=args.time_scale,
             replication=args.replication,
+        )
+        requests = SharedgptTrace(args.sharedgpt).get_reqs(config, model_ids=args.model_ids)
+        run_benchmark(args, config, requests)
+    else:
+        print("Using synthetic trace generation")
+        model_paths = args.model_paths if args.model_paths is not None else [f"model_{i+1}" for i in range(args.num_models)]
+        config = TraceConfig(
+            model_paths=model_paths,
+            req_rate=args.req_rate,
+            duration=60,
+            input_range=(256, 512),
+            output_range=(256, 512),
+            seed=args.seed,
+            alpha=2.1,
+            cv=1,
             ttft_slo_scale=args.ttft_slo_scale,
             tpot_slo_scale=args.tpot_slo_scale,
+            slo=300,
+            micro_benchmark=args.micro_benchmark,
+            e2e_benchmark=args.e2e_benchmark,
+            time_scale=args.time_scale,
+            replication=args.replication,
         )
-        
-        # Run benchmark with synthetic trace
         run_benchmark(args, config)

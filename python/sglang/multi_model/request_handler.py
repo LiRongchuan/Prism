@@ -105,13 +105,10 @@ class RequestHandler:
         controller_ipc_name: Optional[str] = None,
     ):
         self.server_args = server_args
-
         # Init inter-process communication
         num_detokenizer = 1
         num_controller = 1 if controller_ipc_name is not None else 0
-        context = zmq.asyncio.Context(
-            io_threads=num_engines + num_detokenizer + num_controller
-        )
+        context = zmq.asyncio.Context(io_threads=num_engines + num_detokenizer + num_controller)
 
         # Store IPC file paths for cleanup
         self.ipc_files = set()
@@ -122,9 +119,7 @@ class RequestHandler:
         self.recv_from_detokenizer.bind(f"ipc://{ipc_name}")
 
         # for sending generation requests to scheduler
-        self.redis_client = AsyncRedisClient(
-            server_args.redis_host, server_args.redis_port, server_args.redis_db
-        )
+        self.redis_client = AsyncRedisClient(server_args.redis_host, server_args.redis_port, server_args.redis_db)
 
         # send requests other than generation, e.g. start/stop profiling, abort requests, control memory pool size, activate/deactivate models
         self.send_to_scheduler_dict = defaultdict(
@@ -144,24 +139,22 @@ class RequestHandler:
             self.send_to_controller = None
 
         self.gpu_id_to_model_instance = gpu_id_to_model_instance
-        # generation requests will be sent into redis with the key of `generate_request_prefix:model_name`, for scheduler to consume
-        self.generate_request_key_prefix = (
-            server_args.frontend_generate_request_key_prefix
-        )
-
-        self.send_to_gpu_scheduler_dict = {}
+        self.send_to_gpu_scheduler_dict: Dict[int, zmq.Socket] = {}
         if server_args.enable_gpu_scheduler:
             for gpu_id in gpu_id_to_model_instance.keys():
                 ipc_name = f"request_handler_to_gpu_scheduler_{gpu_id}"
                 self.ipc_files.add(f"ipc://{ipc_name}")
                 self.send_to_gpu_scheduler_dict[gpu_id] = context.socket(zmq.PUSH)
                 self.send_to_gpu_scheduler_dict[gpu_id].connect(f"ipc://{ipc_name}")
-
+        # elif server_args.enable_model_scheduler:
+        #     ipc_name = f"request_handler_to_model_scheduler"
+        #     self.ipc_files.add(f"ipc://{ipc_name}")
+        #     self.send_to_model_scheduler = context.socket(zmq.PUSH)
+        #     self.send_to_model_scheduler.connect(f"ipc://{ipc_name}")
         # Register cleanup function
         atexit.register(self.cleanup)
         signal.signal(signal.SIGTERM, self._signal_handler)
         signal.signal(signal.SIGINT, self._signal_handler)
-
         self.is_generation = True
         # Store states
         self.to_create_loop = True
@@ -193,7 +186,10 @@ class RequestHandler:
             if hasattr(self, "send_to_gpu_scheduler_dict"):
                 for gpu_id, socket in self.send_to_gpu_scheduler_dict.items():
                     zmq_sockets[f"send_to_gpu_scheduler_{gpu_id}"] = socket
-
+                    
+            # if hasattr(self, "send_to_model_scheduler"):
+            #     zmq_sockets["send_to_model_scheduler"] = self.send_to_model_scheduler
+                
             # Clean up using utility function
             cleanup_zmq_ipc(
                 zmq_sockets=zmq_sockets,
@@ -234,7 +230,8 @@ class RequestHandler:
 
         if isinstance(obj, EmbeddingReqInput) and self.is_generation:
             raise ValueError(
-                "This model does not appear to be an embedding model by default. Please add `--is-embedding` when launching the server or try another model."
+                "This model does not appear to be an embedding model by default. "
+                "Please add `--is-embedding` when launching the server or try another model."
             )
 
         obj.post_init()
@@ -267,9 +264,7 @@ class RequestHandler:
                     input_text = obj.text[input_id_index]
                     input_ids = None
                 else:
-                    input_text = (
-                        obj.text[input_id_index] if obj.text is not None else None
-                    )
+                    input_text = (obj.text[input_id_index] if obj.text is not None else None)
                     input_ids = obj.input_ids[input_id_index]
 
                 sampling_params = obj.sampling_params[index]
@@ -292,12 +287,9 @@ class RequestHandler:
                 else:
                     input_text = obj.text
                     rid = obj.rid[0]
-
                 if obj.input_ids is not None:
                     input_ids = obj.input_ids
-                    if isinstance(obj.input_ids, list) and isinstance(
-                        obj.input_ids[0], list
-                    ):
+                    if isinstance(obj.input_ids, list) and isinstance(obj.input_ids[0], list):
                         # when obj["input_ids"] is List[List[int]]
                         input_ids = obj.input_ids[input_id_index]
                         rid = obj.rid[index]
@@ -308,9 +300,7 @@ class RequestHandler:
                     input_ids = None
             else:
                 input_text = None
-                if isinstance(obj.input_ids, list) and isinstance(
-                    obj.input_ids[0], list
-                ):
+                if isinstance(obj.input_ids, list) and isinstance(obj.input_ids[0], list):
                     # when obj["input_ids"] is List[List[int]]
                     input_ids = obj.input_ids[input_id_index]
                     rid = obj.rid[index]
@@ -320,9 +310,7 @@ class RequestHandler:
 
             sampling_params = obj.sampling_params[0]
             sampling_params.max_new_tokens = 0
-            image_inputs = await self.image_processor.process_images_async(
-                obj.image_data[0], input_text or input_ids, obj
-            )
+            image_inputs = await self.image_processor.process_images_async(obj.image_data[0], input_text or input_ids, obj)
             if image_inputs and "input_ids" in image_inputs:
                 input_ids = image_inputs["input_ids"]
             return_logprob = obj.return_logprob[0]
@@ -335,7 +323,6 @@ class RequestHandler:
                 if isinstance(obj.lora_path, list)
                 else obj.lora_path
             )
-
             single_request_obj = GenerateReqInput(
                 rid=rid,
                 text=input_text,
@@ -349,6 +336,9 @@ class RequestHandler:
                 lora_path=lora_path,
                 model=obj.model,
                 slo=obj.slo,
+                slo_ttft=obj.slo_ttft,
+                slo_tpot=obj.slo_tpot,
+                prompt_len=len(input_text)
             )
 
         assert self.is_generation, "Only generation models are supported."
@@ -356,8 +346,12 @@ class RequestHandler:
         # Send request to the generation queue with model name in the key
         model = obj.model
         try:
+            # 向scheduler发送
+            # enable-gpu-scheduler：前端 -> gpu_scheduler -> 后端
+            # enable-model-scheduler：前端 -> model_scheduler -> 后端
+            # 否则前端等于后端
             await self.redis_client.send_pyobj(
-                key=f"{self.generate_request_key_prefix}:{model}",
+                key=f"{self.server_args.frontend_generate_request_key_prefix}:{model}",
                 obj=single_request_obj,
             )
         except asyncio.exceptions.CancelledError:
@@ -598,15 +592,13 @@ class RequestHandler:
 
     def _send_req_to_scheduler(
         self,
-        req: Union[ActivateReqInput, DeactivateReqInput, GetMemoryUsageReq],
+        req: Union[ActivateReqInput, DeactivateReqInput, ResizeMemPoolReqInput, GetMemoryUsageReq],
         model_name: Optional[str] = None,
     ):
         # send request to the corresponding scheduler
         if model_name is None:
             model_name = req.model_name
         instance_idx = req.instance_idx
-        print(f"send_to_scheduler_dict: {self.send_to_scheduler_dict}")
-        print(f"model_name: {model_name}, instance_idx: {instance_idx}")
         send_to_scheduler = self.send_to_scheduler_dict[model_name][instance_idx]
         send_to_scheduler.send_pyobj(req)
 
@@ -642,9 +634,7 @@ class RequestHandler:
             success = state.finished
             out = state.out_list[-1]
         except:
-            logger.error(
-                f"Error when sending request {req} and waiting for response: {get_exception_traceback()}"
-            )
+            logger.error(f"Error when sending request {req} and waiting for response: {get_exception_traceback()}")
             raise
         finally:
             if rid in self.rid_to_state:

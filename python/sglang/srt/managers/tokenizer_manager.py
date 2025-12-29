@@ -284,6 +284,8 @@ class RequestHandler:
                 lora_path=lora_path,
                 model=obj.model,
                 slo=obj.slo,
+                slo_ttft=obj.slo_ttft,
+                slo_tpot=obj.slo_tpot,
             )
 
         # Send to the controller

@@ -250,9 +250,7 @@ class RequestHandlerWorkerPool:
             self.create_handle_loop()
 
         if isinstance(obj, EmbeddingReqInput) and self.is_generation:
-            raise ValueError(
-                "This model does not appear to be an embedding model by default. Please add `--is-embedding` when launching the server or try another model."
-            )
+            raise ValueError("This model does not appear to be an embedding model by default. Please add `--is-embedding` when launching the server or try another model.")
 
         obj.post_init()
         is_single = obj.is_single

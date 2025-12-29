@@ -61,15 +61,12 @@ def load_model_info():
 
 def get_model_path_to_cell_size(model_paths: List[str]) -> Dict[str, int]:
     """Get the mapping between model paths and their cell sizes.
-
     Args:
         model_paths: A list of model paths.
-
     Returns:
         A dictionary mapping model paths to their cell sizes in bytes.
     """
     model_info = load_model_info()
-
     model_path_to_cell_size = {}
     for model_path in model_paths:
         if model_path not in model_info:
@@ -82,13 +79,12 @@ def get_model_path_to_cell_size(model_paths: List[str]) -> Dict[str, int]:
 
 
 def get_model_path_to_model_size(model_paths: List[str]) -> Dict[str, int]:
+    """获取模型权重比大小"""
     model_info = load_model_info()
     model_path_to_model_size = {}
     for model_path in model_paths:
         if model_path not in model_info:
-            raise ValueError(
-                f"Model path {model_path} not found in the profiled model info file."
-            )
+            raise ValueError(f"Model path {model_path} not found in the profiled model info file.")
         model_path_to_model_size[model_path] = model_info[model_path]["model_size"]
     return model_path_to_model_size
 

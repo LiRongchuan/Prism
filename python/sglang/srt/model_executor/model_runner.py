@@ -14,7 +14,7 @@ limitations under the License.
 """
 
 """ModelRunner runs the forward passes of the models."""
-
+import math
 import atexit
 import copy
 import dataclasses
@@ -461,16 +461,20 @@ class BaseModelRunner:
         return max_num_token
 
     def _get_max_total_num_tokens(self, memory_pool_size: float):
-        approx_max_num_reqs = 2048
+        """使用预估请求数，计算可运行token数"""
+        # TODO: 针对模型修改最大请求
+        approx_max_num_reqs = self.server_args.max_num_reqs
+        approx_max_num_reqs = 512 if approx_max_num_reqs is None else approx_max_num_reqs
         approx_req_to_token_pool_size = (
-            (approx_max_num_reqs + 1)
-            * (self.model_config.context_len + 4)
-            * torch._utils._element_size(torch.int32)
-            / (1 << 30)
+            (approx_max_num_reqs + 1)                   # 请求数量
+            * (self.model_config.context_len + 4)       # 请求长度
+            * torch._utils._element_size(torch.int32)   # 元素大小
+            / (1 << 30)                                 # 单位GB
         )
+        logger.info(f"Max context length: {self.model_config.context_len}, request to token size: {approx_req_to_token_pool_size} GB")
         token_to_kv_pool_size = memory_pool_size - approx_req_to_token_pool_size
 
-        max_num_token = int(token_to_kv_pool_size * (1 << 30) // self.cell_size)
+        max_num_token = int(token_to_kv_pool_size * (1 << 30) // self.cell_size) # cell_size：每token占用cache大小
         max_total_tokens = self.server_args.max_total_tokens
         if max_total_tokens is not None:
             if max_total_tokens > max_num_token:
@@ -480,9 +484,12 @@ class BaseModelRunner:
                 )
             max_num_token = min(max_num_token, max_total_tokens)
         if max_num_token <= 0:
-            raise RuntimeError(
-                "Not enough memory. Please try to increase --mem-fraction-static or --max-memory-pool-size or --max-mem-usage."
-            )
+            # raise RuntimeError(
+            #     "Not enough memory. Please try to increase --mem-fraction-static or --max-memory-pool-size or --max-mem-usage."
+            # )
+            logger.warning("Not enough memory. Please try to increase --max-memory-pool-size or decrease --max-num-reqs")
+            # TODO: 修改比例
+            max_num_token = int(token_to_kv_pool_size * 0.5 * (1 << 30) // self.cell_size)
         return max_num_token
 
     def get_memory_usage(self):
@@ -511,6 +518,7 @@ class BaseModelRunner:
         max_total_num_tokens: int,
         init_req_to_token_only: bool = False,
         max_context_len: Optional[int] = None,
+        max_alloc_num_tokens: Optional[int] = None
     ):
         tic = time.time()
         if max_context_len is None:
@@ -537,10 +545,7 @@ class BaseModelRunner:
                 req_to_token_pool_memory, req_to_token_pool_memory, 0
             )
             return memory_pool_info
-        if (
-            self.model_config.attention_arch == AttentionArch.MLA
-            and not self.server_args.disable_mla
-        ):
+        if (self.model_config.attention_arch == AttentionArch.MLA and not self.server_args.disable_mla):
             self.token_to_kv_pool = MLATokenToKVPool(
                 max_total_num_tokens,
                 dtype=self.kv_cache_dtype,
@@ -564,8 +569,10 @@ class BaseModelRunner:
                 min_reserve_mem=self.min_reserve_mem,
             )
         else:
+            # NOTE: 分离了初始分配和初始管理器
             self.token_to_kv_pool = MHATokenToKVPool(
-                max_total_num_tokens,
+                size=max_total_num_tokens,
+                max_size=max_alloc_num_tokens if max_alloc_num_tokens is not None else max_total_num_tokens,
                 dtype=self.kv_cache_dtype,
                 head_num=self.model_config.get_num_kv_heads(self.tp_size),
                 head_dim=self.model_config.head_dim,

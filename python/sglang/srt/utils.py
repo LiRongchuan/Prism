@@ -148,13 +148,11 @@ def get_available_gpu_memory(device, gpu_id, distributed=False):
     if device == "cuda":
         num_gpus = torch.cuda.device_count()
         assert gpu_id < num_gpus
-
         if torch.cuda.current_device() != gpu_id:
             print(
                 f"WARNING: current device is not {gpu_id}, but {torch.cuda.current_device()}, ",
                 "which may cause useless memory allocation for torch CUDA context.",
             )
-
         torch.cuda.empty_cache()
         free_gpu_memory, _ = torch.cuda.mem_get_info(gpu_id)
 

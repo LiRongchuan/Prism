@@ -295,7 +295,7 @@ class SingleModelRunner(BaseModelRunner):
                 memory_pool_size=memory_pool_size,
                 restart_token_to_kv_pool=restart_token_to_kv_pool,
                 memory_pinned=memory_pinned,
-                use_model_service=self.use_model_service,
+                # use_model_service=self.use_model_service,
             )
         else:
             if self.tp_size > 1:
@@ -329,9 +329,7 @@ class SingleModelRunner(BaseModelRunner):
     def resize_memory_pool(self, new_memory_pool_size: Optional[float] = None):
         if self.server_args.enable_elastic_memory:
             if new_memory_pool_size is not None:
-                self.max_total_num_tokens = self._get_max_total_num_tokens(
-                    new_memory_pool_size
-                )
+                self.max_total_num_tokens = max(self._get_max_total_num_tokens(new_memory_pool_size), self.max_total_num_tokens)
                 self.max_num_reqs = self._get_max_num_reqs(self.max_total_num_tokens)
                 actual_memory = self.max_total_num_tokens * self.cell_size // (1 << 30)
                 logger.info(

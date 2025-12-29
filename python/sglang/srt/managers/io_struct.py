@@ -23,7 +23,7 @@ import time
 import uuid
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from sglang.srt.managers.schedule_batch import BaseFinishReason
 from sglang.srt.sampling.sampling_params import SamplingParams
@@ -61,6 +61,8 @@ class GenerateReqInput:
     # multi-model related
     model: Optional[str] = None
     slo: Optional[float] = None
+    slo_ttft: Optional[float] = None
+    slo_tpot: Optional[float] = None
     arrival_time: Optional[float] = None
     is_warmup: bool = False
     # For controller to know the input and output length
@@ -417,6 +419,32 @@ class PreemptMode(Enum):
 
 
 @dataclass
+class ActivateReqInput:
+    model_name: str
+    # NOTE(ke): For TP case, it's gpu_id for rank0
+    gpu_id: int
+    instance_idx: Optional[int] = 0
+    rid: Optional[str] = None
+    memory_pool_size: Optional[float] = None
+
+    def __post_init__(self):
+        if self.rid is None:
+            self.rid = uuid.uuid4().hex
+
+
+@dataclass
+class ActivateReqOutput:
+    rid: str
+    success: bool
+    # in GB
+    memory_usage: MemoryUsage
+    # necessary for gpu scheduler communication
+    model_name: str
+    instance_idx: Optional[int] = 0
+    gpu_id: Optional[int] = None
+
+
+@dataclass
 class DeactivateReqInput:
     model_name: str
     instance_idx: Optional[int] = 0
@@ -441,32 +469,6 @@ class DeactivateReqInput:
 class DeactivateReqOutput:
     rid: str
     success: bool
-    memory_usage: MemoryUsage
-    # necessary for gpu scheduler communication
-    model_name: str
-    instance_idx: Optional[int] = 0
-    gpu_id: Optional[int] = None
-
-
-@dataclass
-class ActivateReqInput:
-    model_name: str
-    # NOTE(ke): For TP case, it's gpu_id for rank0
-    gpu_id: int
-    instance_idx: Optional[int] = 0
-    rid: Optional[str] = None
-    memory_pool_size: Optional[float] = None
-
-    def __post_init__(self):
-        if self.rid is None:
-            self.rid = uuid.uuid4().hex
-
-
-@dataclass
-class ActivateReqOutput:
-    rid: str
-    success: bool
-    # in GB
     memory_usage: MemoryUsage
     # necessary for gpu scheduler communication
     model_name: str
@@ -504,7 +506,6 @@ class GetMemoryUsageReq:
     model_name: str
     instance_idx: Optional[int] = 0
     rid: Optional[str] = None
-
     def __post_init__(self):
         if self.rid is None:
             self.rid = uuid.uuid4().hex
@@ -513,14 +514,15 @@ class GetMemoryUsageReq:
 @dataclass
 class GetMemoryUsageReqOutput:
     rid: str
+    model_name: str
     memory_usage: MemoryUsage
 
 
 @dataclass
 class ResizeMemPoolReqInput:
     model_name: str
-    memory_pool_size: Optional[float] = None
     instance_idx: Optional[int] = 0
+    memory_pool_size: Optional[float] = None
 
 
 @dataclass
@@ -533,3 +535,19 @@ class UpdateModelTput:
     token_count: int = 0
     prefill_token_count: int = 0
     decode_token_count: int = 0
+    
+    
+@dataclass
+class UpdateQueueStats:
+    model_name: str
+    prefill_timestamps: Dict[str, float]
+    finish_timestamps: Dict[str, Tuple[float, int, float]] # prefill_time, output_len, finish_time
+    inflight_reqs: int
+    running_reqs: int
+    chunk_size: int
+    
+    
+@dataclass
+class ResizeChunkInput:
+    model_name: str
+    chunk_size: int

@@ -48,13 +48,13 @@ if TYPE_CHECKING:
 
 
 class ForwardMode(IntEnum):
-    # Prefill a new sequence. This is deprecated now. "EXTEND" covers this case.
+    # 已弃用
     PREFILL = auto()
-    # Extend a sequence. The KV cache of the first part of the sequence is already computed (e.g., system prompt).
+    # Extend KV Cache: 部分输入已缓存，填充更多输入/输出token
     EXTEND = auto()
-    # Decode one token.
+    # AR Decode: 每循环输出一个token
     DECODE = auto()
-    # Contains both EXTEND and DECODE.
+    # 同时存在EXTEND和DECODE阶段
     MIXED = auto()
 
     def is_prefill(self):
